@@ -9,26 +9,44 @@
 () recv_internal() {
 }
 
+cell solution(int hash, cell cur) asm """
+    // hash cur
+    DUP	HASHCU	 
+    s2 PUSH	EQUAL	
+    IFJMP:<{	
+      NIP	
+    }> // hash cur
 
-cell empty_cell() asm "<b b> PUSHREF";
+    PUSHNULL CONS	//  hash t
+    <{ 
+      AGAINBRK:
+      UNCONS	//  hash c t
+      SWAP CTOS	//  hash t cs
+      DUP	SREFS	//  hash t cs srefs
+      REPEAT:<{	//  hash t cs
+        LDREF	//  hash t ref cs
+        OVER	//  hash t ref cs ref
+        HASHCU	//  hash t ref cs _16
+        s4 PUSH	//  hash t ref cs _16 hash
+        EQUAL	//  hash t ref cs _17
+        IFJMP:<{	//  hash t ref cs
+          s1 s3 XCHG
+          3 BLKDROP	//  ref
+          RETALT
+        }>	//  hash t ref cs
+        s0 s2 XCHG	//  hash cs ref t
+        CONS	//  hash cs t
+        SWAP	//  hash t cs
+      }>
+      DROP	//  hash t
+    }>CONT	//  hash t
+    <{ 2DROP	
+       <b b> PUSHREF
+    }>CONT
+    TRY
+""";
 
 ;; testable
-(cell) find_branch_by_hash(int hash, cell cur) method_id {
-    if (cell_hash(cur) == hash) {
-        return cur;
-    }
-    
-    tuple t = cons(cur, null());
-    do {
-        cell c = t~list_next();
-        slice cs = c.begin_parse();
-        repeat (cs.slice_refs()) {
-            cell ref = cs~load_ref();
-            if (cell_hash(ref) == hash) {
-                return ref;
-            }
-            t = cons(ref, t);
-        }
-    } until t.null?();
-    return empty_cell();
+(cell) find_branch_by_hash(int hash, cell tree) method_id {
+  return solution(hash, cur);
 }
