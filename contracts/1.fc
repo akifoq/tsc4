@@ -9,21 +9,40 @@
 () recv_internal() {
 }
 
-cell empty_cell() asm "<b b> PUSHREF";
+cell solution(int hash, cell cur) asm """
+    PUSHNULL	//  hash cur _3
+    CONS	//  hash t
+    <{ 
+      AGAINBRK:
+      UNCONS	//  hash c t
+      OVER	//  hash c t c
+      HASHCU	//  hash c t _8
+      s3 s(-1) PUXC	//  hash c t hash _8
+      EQUAL	//  hash c t _9
+      IFJMP:<{	//  hash c t
+        DROP
+        NIP	//  c
+        RETALT
+      }>	//  hash c t
+      SWAP	//  hash t c
+      CTOS	//  hash t cs
+      DUP	//  hash t cs cs
+      SREFS	//  hash t cs _12
+      REPEAT:<{	//  hash t cs
+        LDREF	//  hash t _13 cs
+        s0 s2 XCHG	//  hash cs _13 t
+        CONS	//  hash cs t
+        SWAP	//  hash t cs
+      }>
+      DROP	//  hash t
+    }>CONT	//  hash t
+    <{ 2DROP	
+       <b b> PUSHREF
+    }>CONT
+    TRY
+""";
 
 ;; testable
-(cell) find_branch_by_hash(int hash, cell cur) method_id {
-    tuple t = cons(cur, null());
-    do {
-        cell c = t~list_next();
-        if (hash == cell_hash(c)) {
-            return c;
-        } else {
-            slice cs = c.begin_parse();
-            repeat (cs.slice_refs()) {
-                t = cons(cs~load_ref(), t);
-            }
-        }
-    } until t.null?();
-    return empty_cell();
+(cell) find_branch_by_hash(int hash, cell tree) method_id {
+  return solution(hash, tree);
 }
