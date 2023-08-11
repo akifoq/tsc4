@@ -22,7 +22,7 @@ cell solution(int hash, cell cur) asm """
       AGAINBRK:
       UNCONS	//  hash c t
       SWAP CTOS	//  hash t cs
-      DUP	SREFS	//  hash t cs srefs
+      DUP SREFS	//  hash t cs srefs
       REPEAT:<{	//  hash t cs
         LDREF	//  hash t ref cs
         OVER	//  hash t ref cs ref
@@ -48,5 +48,5 @@ cell solution(int hash, cell cur) asm """
 
 ;; testable
 (cell) find_branch_by_hash(int hash, cell tree) method_id {
-  return solution(hash, cur);
+  return solution(hash, tree);
 }
