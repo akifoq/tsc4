@@ -10,6 +10,7 @@
 }
 
 cell solution(int hash, cell cur) asm """
+    2 PUSHINT ONLYTOPX 
     // hash cur
     DUP	HASHCU	 
     s2 PUSH	EQUAL	
