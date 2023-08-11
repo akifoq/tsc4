@@ -10,7 +10,7 @@
 }
 
 cell solution(int hash, cell cur) asm """
-    DEPTH 2 EUQAL NOT 
+    DEPTH 2 EQUAL NOT 
     IFJMP:<{ 42 PUSHINT RETALT }>
     // hash cur
     DUP	HASHCU	 
