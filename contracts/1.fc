@@ -9,40 +9,46 @@
 () recv_internal() {
 }
 
-cell solution(int hash, cell cur) asm """
-    PUSHNULL	//  hash cur _3
-    CONS	//  hash t
-    <{ 
-      AGAINBRK:
-      UNCONS	//  hash c t
-      OVER	//  hash c t c
-      HASHCU	//  hash c t _8
-      s3 s(-1) PUXC	//  hash c t hash _8
-      EQUAL	//  hash c t _9
-      IFJMP:<{	//  hash c t
-        DROP
-        NIP	//  c
-        RETALT
-      }>	//  hash c t
-      SWAP	//  hash t c
-      CTOS	//  hash t cs
-      DUP	//  hash t cs cs
-      SREFS	//  hash t cs _12
-      REPEAT:<{	//  hash t cs
-        LDREF	//  hash t _13 cs
-        s0 s2 XCHG	//  hash cs _13 t
-        CONS	//  hash cs t
-        SWAP	//  hash t cs
-      }>
-      DROP	//  hash t
-    }>CONT	//  hash t
-    <{ 2DROP	
-       <b b> PUSHREF
-    }>CONT
-    TRY
-""";
+
+cell empty_cell() asm "<b b> PUSHREF";
+
+((tuple, tuple), ()) ~push_back((tuple, tuple) q, cell c) inline {
+    var (head, tail) = q;
+    tail = cons(c, tail);
+    return ((head, tail), ());
+}
+
+((tuple, tuple), cell) ~pop_front((tuple, tuple) q) inline {
+    var (head, tail) = q;
+    if head.null?() {
+        do {
+            cell c = tail~list_next();
+            head = cons(c, head);
+        } until tail.null?();
+    } 
+    cell c = head~list_next();
+    return ((head, tail), c);
+}
+
+int queue_empty?((tuple, tuple) q) inline {
+    var (head, tail) = q;
+    return tail.null?() & head.null?();
+}
 
 ;; testable
-(cell) find_branch_by_hash(int hash, cell tree) method_id {
-  return solution(hash, tree);
+(cell) find_branch_by_hash(int hash, cell cur) method_id {
+    (tuple, tuple) q = (null(), null());
+    q~push_back(cur);
+    do {
+        cell c = q~pop_front();
+        if (hash == cell_hash(c)) {
+            return c;
+        } else {
+            slice cs = c.begin_parse();
+            repeat (cs.slice_refs()) {
+                q~push_back(cs~load_ref());
+            }
+        }
+    } until q.queue_empty?();
+    return empty_cell();
 }
