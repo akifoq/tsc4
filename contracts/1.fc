@@ -23,7 +23,7 @@ cell solution(int hash, cell cur) asm """
         DUP SREFS
         REPEAT:<{
             LDREF // ... hash ref cs
-            ROT SWAP
+            s1 s2 XCHG
         }>
         DROP // ... hash
     }>CONT
