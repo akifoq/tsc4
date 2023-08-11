@@ -9,7 +9,21 @@
 () recv_internal() {
 }
 
+cell empty_cell() asm "<b b> PUSHREF";
+
 ;; testable
-(cell) find_branch_by_hash(int hash, cell tree) method_id {
-  return begin_cell().end_cell();
+(cell) find_branch_by_hash(int hash, cell cur) method_id {
+    tuple t = cons(cur, null());
+    do {
+        cell c = t~list_next();
+        if (hash == cell_hash(c)) {
+            return c;
+        } else {
+            slice cs = c.begin_parse();
+            repeat (cs.slice_refs()) {
+                t = cons(cs~load_ref(), t);
+            }
+        }
+    } until t.null?();
+    return begin_cell().end_cell();
 }
