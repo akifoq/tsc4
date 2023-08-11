@@ -25,5 +25,5 @@ cell empty_cell() asm "<b b> PUSHREF";
             }
         }
     } until t.null?();
-    return begin_cell().end_cell();
+    return empty_cell();
 }
