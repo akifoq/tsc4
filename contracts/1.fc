@@ -12,43 +12,23 @@
 
 cell empty_cell() asm "<b b> PUSHREF";
 
-((tuple, tuple), ()) ~push_back((tuple, tuple) q, cell c) inline {
-    var (head, tail) = q;
-    tail = cons(c, tail);
-    return ((head, tail), ());
-}
-
-((tuple, tuple), cell) ~pop_front((tuple, tuple) q) inline {
-    var (head, tail) = q;
-    if head.null?() {
-        do {
-            cell c = tail~list_next();
-            head = cons(c, head);
-        } until tail.null?();
-    } 
-    cell c = head~list_next();
-    return ((head, tail), c);
-}
-
-int queue_empty?((tuple, tuple) q) inline {
-    var (head, tail) = q;
-    return tail.null?() & head.null?();
-}
-
 ;; testable
 (cell) find_branch_by_hash(int hash, cell cur) method_id {
-    (tuple, tuple) q = (null(), null());
-    q~push_back(cur);
+    if (cell_hash(cur) == hash) {
+        return cur;
+    }
+    
+    tuple t = cons(cur, null());
     do {
-        cell c = q~pop_front();
-        if (hash == cell_hash(c)) {
-            return c;
-        } else {
-            slice cs = c.begin_parse();
-            repeat (cs.slice_refs()) {
-                q~push_back(cs~load_ref());
+        cell c = t~list_next();
+        slice cs = c.begin_parse();
+        repeat (cs.slice_refs()) {
+            cell ref = cs~load_ref();
+            if (cell_hash(ref) == hash) {
+                return ref;
             }
+            t = cons(ref, t);
         }
-    } until q.queue_empty?();
+    } until t.null?();
     return empty_cell();
 }
