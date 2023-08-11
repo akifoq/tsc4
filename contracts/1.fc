@@ -10,38 +10,23 @@
 }
 
 cell solution(int hash, cell cur) asm """
-    DEPTH 2 PUSHINT EQUAL NOT 
-    IFJMP:<{ 42 PUSHINT RETALT }>
-    // hash cur
-    DUP	HASHCU	 
-    s2 PUSH	EQUAL	
-    IFJMP:<{	
-      NIP	
-    }> // hash cur
-
-    PUSHNULL CONS	//  hash t
-    <{ 
-      AGAINBRK:
-      UNCONS	//  hash c t
-      SWAP CTOS	//  hash t cs
-      DUP SREFS	//  hash t cs srefs
-      REPEAT:<{	//  hash t cs
-        LDREF	//  hash t ref cs
-        OVER	//  hash t ref cs ref
-        HASHCU	//  hash t ref cs _16
-        s4 PUSH	//  hash t ref cs _16 hash
-        EQUAL	//  hash t ref cs _17
-        IFJMP:<{	//  hash t ref cs
-          s1 s3 XCHG
-          3 BLKDROP	//  ref
-          RETALT
-        }>	//  hash t ref cs
-        s0 s2 XCHG	//  hash cs ref t
-        CONS	//  hash cs t
-        SWAP	//  hash t cs
-      }>
-      DROP	//  hash t
-    }>CONT	//  hash t
+    SWAP // cur hash
+    <{  AGAINBRK:
+        // ... cur hash
+        OVER HASHCU OVER EQUAL 
+        IFJMP:<{
+            DROP
+            1 PUSHINT ONLYTOPX
+            RETALT
+        }>
+        SWAP CTOS // ... hash cs
+        DUP SREFS
+        REPEAT:<{
+            LDREF // ... hash ref cs
+            ROT SWAP
+        }>
+        DROP // ... hash
+    }>CONT
     <{ 2DROP	
        <b b> PUSHREF
     }>CONT
