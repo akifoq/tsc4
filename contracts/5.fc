@@ -24,7 +24,7 @@ tuple solution(int n, int k) asm """
   0 pos !
 
   { pos @ 1+ pos ! } : inc-pos
-  { <b rot 256 u, swap 256 u, b> <s pos @ dict @ 9 udict! drop dict ! inc-pos } : add-fib
+  { <{ rot PUSHINT swap PUSHINT }>s pos @ dict @ 9 udict! drop dict ! inc-pos } : add-fib
 
   1 0 {
   2dup add-fib
@@ -36,9 +36,7 @@ tuple solution(int n, int k) asm """
   DUP 0 EQINT	
   IFJMP:<{ 2DROP NIL }>
 
-  SWAP dict @ PUSHREF 9 PUSHINT DICTUGET DROP // k cs
-
-  256 LDU 256 PLDU // k a b
+  SWAP dict @ 9 DICTPUSHCONST DICTUGETEXEC
 
   ROT	// b a k
   DUP 1 SETGLOB 
