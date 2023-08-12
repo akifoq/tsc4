@@ -26,12 +26,11 @@ tuple solution(int n, int k) asm """
   SWAP table-code PUSHCONT EXECUTE s2 POP SWAP 
 
   ROT	// b a k
-  DUP 1 SETGLOB 
 
   DEC REPEAT:<{
       TUCK TUCK ADD
   }>
-  NIP 1 GETGLOB TUPLEVAR
+  NIP DEPTH TUPLEVAR
 """;
 
 ;; testable
