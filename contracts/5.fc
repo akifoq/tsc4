@@ -17,16 +17,28 @@
 }
 
 tuple solution(int n, int k) asm """
+  variable dict
+  variable pos
+
+  dictnew dict !
+  0 pos !
+
+  { pos @ 1+ pos ! } : inc-pos
+  { <b rot 256 u, swap 256 u, b> <s pos @ dict @ 9 udict! drop dict ! inc-pos } : add-fib
+
+  1 0 {
+  2dup add-fib
+  tuck +
+  } 370 times add-fib
+
+
   //  n k
   DUP 0 EQINT	
   IFJMP:<{ 2DROP NIL }>
 
-  1 PUSHINT 0 PUSHINT // n k a b
-  3 ROLL 
+  SWAP dict @ PUSHREF 9 PUSHINT DICTUGET DROP // k cs
 
-  REPEAT:<{	//  k a b
-    TUCK ADD
-  }>
+  256 LDU 256 PLDU // k a b
 
   ROT	// b a k
   DUP 1 SETGLOB 
