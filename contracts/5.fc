@@ -26,7 +26,7 @@ tuple solution(int n, int k) asm """
   table-code PUSHCONT EXECUTE ROT	// b a k
   
   DEC REPEAT:<{
-      TUCK TUCK ADD
+      s0 s1 s0 PUXCPU ADD
   }>
   NIP DEPTH TUPLEVAR
 """;
