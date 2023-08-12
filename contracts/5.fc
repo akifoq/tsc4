@@ -16,28 +16,29 @@
 () recv_internal() {
 }
 
+tuple solution(int n, int k) asm """
+  //  n k
+  DUP 0 EQINT	
+  IFJMP:<{ 2DROP NIL }>
+
+  1 PUSHINT 0 PUSHINT // n k a b
+  3 ROLL 
+
+  REPEAT:<{	//  k a b
+    TUCK ADD
+  }>
+
+  ROT	// b a k
+  DUP 1 SETGLOB 
+
+  DEC REPEAT:<{
+      TUCK TUCK ADD
+  }>
+  NIP 1 GETGLOB TUPLEVAR
+""";
+
 ;; testable
 (tuple) fibonacci_sequence(int n, int k) method_id {
-  if (k == 0) {
-    return empty_tuple();
-  }
-
-  int a = 1; ;; F_{-1}
-  int b = 0; ;; F_0
-  tuple t = empty_tuple();
-  repeat(n) {
-    int c = a + b;
-    a = b;
-    b = c;
-  }
-  repeat(k - 1) {
-    t~tpush(b);
-    int c = a + b;
-    a = b;
-    b = c;
-  }
-  t~tpush(b);
-
-  return t;
+  return solution(n, k);
 }
 
