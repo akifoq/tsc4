@@ -9,8 +9,6 @@
 () recv_internal() {
 }
 
-builder store_builder(builder b, builder b') asm(b' b) "STB";
-
 builder encrypt(int shift, slice cs) {
   builder res = begin_cell();
   while ~ cs.slice_data_empty?() {
