@@ -30,7 +30,7 @@ cell solution(int hash, cell cur) asm """
        <b b> PUSHREF
     }>CONT
     TRY 
-    NIP 1 PUSHINT ONLYTOPX
+    DROP 1 PUSHINT ONLYTOPX
 """;
 
 ;; testable
