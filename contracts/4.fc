@@ -10,45 +10,48 @@
 }
 
 builder encrypt_asm(int shift, slice cs) asm """
-  //  shift cs
-  NEWC SWAP //  shift res cs
-  UNTIL:<{
-    8 LDU SWAP // shift res cs c
+  AGAINBRK:<{
+    // ... shift cs
+    NEWC SWAP //  shift res cs
+    UNTIL:<{
+      8 LDU SWAP // shift res cs c
 
-    DUP 96 GTINT	
-    OVER 123 LESSINT 	
-    AND
-    IFJMP:<{	//  shift res cs c
-      -97 ADDCONST	
-      s3 PUSH ADD	
-      26 PUSHINT MOD	
-      97 ADDCONST
+      DUP 96 GTINT	
+      OVER 123 LESSINT 	
+      AND
+      IFJMP:<{	//  shift res cs c
+        -97 ADDCONST	
+        s3 PUSH ADD	
+        26 PUSHINT MOD	
+        97 ADDCONST
+
+        ROT 8 STU // shift cs res
+        s1 s0 XCPU SDEMPTY // shift res cs
+      }>
+
+      DUP 64 GTINT 
+      OVER 91 LESSINT 
+      AND
+      IF:<{ //  shift res cs c
+        -65 ADDCONST	
+        s3 PUSH	ADD	
+        26 PUSHINT MOD	
+        65 ADDCONST 
+      }>
 
       ROT 8 STU // shift cs res
       s1 s0 XCPU SDEMPTY // shift res cs
-    }>
+    }>	//  shift res cs
+    DUP SREFS IFNOTRETALT
 
-    DUP 64 GTINT 
-    OVER 91 LESSINT 
-    AND
-    IF:<{ //  shift res cs c
-      -65 ADDCONST	
-      s3 PUSH	ADD	
-      26 PUSHINT MOD	
-      65 ADDCONST 
-    }>
-
-    ROT 8 STU // shift cs res
-    s1 s0 XCPU SDEMPTY // shift res cs
-  }>	//  shift res cs
-  DUP SREFS	
-  IFJMP:<{	//  shift res cs
     LDREFRTOS NIP // shift res cs'
-    s1 s2 XCHG // res shift cs'
-    encrypt CALLDICT 
+    s1 s2 XCHG // ... res shift cs'
+  }> // ... shift res cs' 
+  DROP NIP // ... res
+
+  DEPTH DEC REPEAT:<{
     STBREFR
   }>
-  DROP NIP
 """;
 
 cell cce_asm(int shift, cell text) asm """
@@ -57,7 +60,7 @@ cell cce_asm(int shift, cell text) asm """
   IFJMP:<{ NIP }>
 
   CTOS 32 PUSHINT SDSKIPFIRST	
-  encrypt CALLDICT // res
+  encrypt INLINECALLDICT // res
   0 PUSHINT NEWC // res 0 b
   32 STU STB ENDC
 """;
@@ -68,7 +71,7 @@ cell ccd_asm(int shift, cell text) asm """
   caesar_cipher_encrypt CALLDICT
 """;
 
-builder encrypt(int shift, slice cs) {
+builder encrypt(int shift, slice cs) inline {
   return encrypt_asm(shift, cs);
 }
 
