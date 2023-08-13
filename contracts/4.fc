@@ -19,7 +19,7 @@ builder encrypt(int shift, slice cs) {
     if (c >= 97) & (c <= 122) {
       c = 97 + (c - 97 + shift) % 26;
     }
-    res.store_uint(c, 8);
+    res~store_uint(c, 8);
   }
   if cs.slice_refs() {
     res.store_ref(encrypt(shift, cs.preload_ref().begin_parse()).end_cell());
@@ -31,7 +31,8 @@ builder encrypt(int shift, slice cs) {
 (cell) caesar_cipher_encrypt(int shift, cell text) method_id {
   slice cs = text.begin_parse();
   cs~skip_bits(32);
-  return begin_cell().store_uint(0, 32).store_builder(encrypt(shift, cs)).end_cell();
+  builder res = encrypt(shift, cs);
+  return begin_cell().store_uint(0, 32).store_builder(res).end_cell();
 }
 
 ;; testable
