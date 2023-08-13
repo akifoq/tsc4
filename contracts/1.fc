@@ -13,12 +13,7 @@ cell solution(int hash, cell cur) asm """
     SWAP // cur hash
     <{  AGAINBRK:
         // ... cur hash
-        OVER HASHCU OVER EQUAL 
-        IFJMP:<{
-            DROP
-            1 PUSHINT ONLYTOPX
-            RETALT
-        }>
+        OVER HASHCU OVER EQUAL IFRETALT
         SWAP CTOS // ... hash cs
         DUP SREFS
         REPEAT:<{
@@ -28,9 +23,11 @@ cell solution(int hash, cell cur) asm """
         DROP // ... hash
     }>CONT
     <{ 2DROP	
-       <b b> PUSHREF
+       <b b> PUSHREF RET
     }>CONT
     TRY
+
+    DROP 1 PUSHINT ONLYTOPX
 """;
 
 ;; testable
