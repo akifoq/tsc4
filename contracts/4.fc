@@ -11,22 +11,23 @@
 
 builder encrypt_asm(int shift, slice cs) asm """
   //  shift cs
-  NEWC	//  shift cs res
+  NEWC SWAP //  shift res cs
   UNTIL:<{
-    SWAP 8 LDU
+    8 LDU // shift res c cs
 
-    OVER 64 GTINT	
-    s2 PUSH 91 LESSINT 
+    OVER 64 GTINT 
+    s2 PUSH	91 LESSINT 
     AND
-    IF:<{
+    IF:<{ //  shift res c cs
       SWAP
       -65 ADDCONST	
       s3 PUSH	ADD	
       26 PUSHINT MOD	
-      65 ADDCONST SWAP	
+      65 ADDCONST SWAP
     }>
-    OVER 96 GTINT 
-    s2 PUSH	123 LESSINT	
+
+    OVER 96 GTINT	
+    s2 PUSH 123 LESSINT 	
     AND
     IF:<{	//  shift res c cs
       SWAP	
@@ -35,18 +36,17 @@ builder encrypt_asm(int shift, slice cs) asm """
       26 PUSHINT MOD	
       97 ADDCONST SWAP	
     }>
-    s0 s2 XCHG	//  shift cs c res
-    8 STU	//  shift cs res
-    OVER SDEMPTY
-  }>	//  shift cs res
-  OVER SREFS	
-  IF:<{	//  shift cs res
-    SWAP LDREFRTOS NIP
+    s0 s2 XCHG 8 STU // shift cs res
+    s1 s0 XCPU SDEMPTY // shift res cs
+  }>	//  shift res cs
+  DUP SREFS	
+  IFJMP:<{	//  shift res cs
+    LDREFRTOS NIP // shift res cs'
     s1 s2 XCHG // res shift cs'
-    encrypt CALLDICT STBREFR
-  }>ELSE<{
-    2 1 BLKDROP2	//  res
+    encrypt CALLDICT 
+    STBREFR
   }>
+  DROP NIP
 """;
 
 cell cce_asm(int shift, cell text) asm """
