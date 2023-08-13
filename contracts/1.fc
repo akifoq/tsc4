@@ -10,6 +10,7 @@
 }
 
 cell solution(int hash, cell cur) asm """
+    SAMEALT
     SWAP // cur hash
     <{  AGAINBRK:
         // ... cur hash
@@ -23,7 +24,7 @@ cell solution(int hash, cell cur) asm """
         DROP // ... hash
     }>CONT
     <{ 2DROP	
-       <b b> PUSHREF PUSHNULL
+       <b b> PUSHREF RETALT
     }>CONT
     TRY
 
