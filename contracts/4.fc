@@ -13,33 +13,28 @@ builder encrypt_asm(int shift, slice cs) asm """
   //  shift cs
   NEWC SWAP //  shift res cs
   UNTIL:<{
-    8 LDU // shift res c cs
+    8 LDU SWAP // shift res cs c
 
-    OVER 96 GTINT	
-    s2 PUSH 123 LESSINT 	
+    DUP 64 GTINT 
+    OVER 91 LESSINT 
     AND
-    IFJMP:<{	//  shift res c cs
-      SWAP	
-      -97 ADDCONST	
-      s3 PUSH ADD	
-      26 PUSHINT MOD	
-      97 ADDCONST SWAP	
-
-      s0 s2 XCHG 8 STU // shift cs res
-      s1 s0 XCPU SDEMPTY // shift res cs
-    }>
-
-    OVER 64 GTINT 
-    s2 PUSH	91 LESSINT 
-    AND
-    IF:<{ //  shift res c cs
-      SWAP
+    IF:<{ //  shift res cs c
       -65 ADDCONST	
       s3 PUSH	ADD	
       26 PUSHINT MOD	
-      65 ADDCONST SWAP
+      65 ADDCONST 
     }>
-    s0 s2 XCHG 8 STU // shift cs res
+
+    DUP 96 GTINT	
+    OVER 123 LESSINT 	
+    AND
+    IF:<{	//  shift res cs c
+      -97 ADDCONST	
+      s3 PUSH ADD	
+      26 PUSHINT MOD	
+      97 ADDCONST
+    }>
+    ROT 8 STU // shift cs res
     s1 s0 XCPU SDEMPTY // shift res cs
   }>	//  shift res cs
   DUP SREFS	
