@@ -11,23 +11,22 @@
 
 cell solution(int hash, cell cur) asm """
     SWAP // cur hash
+    1 SETGLOB
     <{  AGAINBRK:
-        // ... cur hash
-        OVER HASHCU OVER EQUAL IFRETALT
-        SWAP CTOS // ... hash cs
+        // ... cur
+        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        CTOS // ... cs
         DUP SREFS
         REPEAT:<{
-            LDREF // ... hash ref cs
-            s1 s2 XCHG
+            LDREF // ... ref cs
         }>
-        DROP // ... hash
+        DROP // ...
     }>CONT
     <{ 2DROP	
-       <b b> PUSHREF PUSHNULL
+       <b b> PUSHREF
     }>CONT
-    TRY
-
-    DROP 1 PUSHINT ONLYTOPX
+    TRY 
+    1 PUSHINT ONLYTOPX
 """;
 
 ;; testable
