@@ -11,55 +11,18 @@
 
 cell solution(int hash, cell cur) asm """
     SWAP // cur hash
+
+    OVER HASHCU OVER EQUAL 
+    IFJMP:<{ NIP }>
+
     1 SETGLOB
     <{  AGAINBRK:
-        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        // ... cur
         CTOS // ... cs
         DUP SREFS
         REPEAT:<{
-          LDREF // ... ref cs
-        }>
-        DROP // ...
-        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
-        CTOS // ... cs
-        DUP SREFS
-        REPEAT:<{
-          LDREF // ... ref cs
-        }>
-        DROP // ...
-        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
-        CTOS // ... cs
-        DUP SREFS
-        REPEAT:<{
-          LDREF // ... ref cs
-        }>
-        DROP // ...
-        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
-        CTOS // ... cs
-        DUP SREFS
-        REPEAT:<{
-          LDREF // ... ref cs
-        }>
-        DROP // ...
-        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
-        CTOS // ... cs
-        DUP SREFS
-        REPEAT:<{
-          LDREF // ... ref cs
-        }>
-        DROP // ...
-        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
-        CTOS // ... cs
-        DUP SREFS
-        REPEAT:<{
-          LDREF // ... ref cs
-        }>
-        DROP // ...
-        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
-        CTOS // ... cs
-        DUP SREFS
-        REPEAT:<{
-          LDREF // ... ref cs
+            LDREF // ... ref cs
+            OVER HASHCU 1 GETGLOB EQUAL IFRETALT
         }>
         DROP // ...
     }>CONT
