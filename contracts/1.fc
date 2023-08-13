@@ -10,27 +10,21 @@
 }
 
 cell solution(int hash, cell cur) asm """
-    SWAP // cur hash
-
-    OVER HASHCU OVER EQUAL 
-    IFJMP:<{ DROP }>
-
-    1 SETGLOB
+    // hash cur
+    SWAP 1 SETGLOB PUSHNULL
     <{  AGAINBRK:
         // ... cur
+        DROP DUP HASHCU 1 GETGLOB EQUAL IFRETALT
         CTOS // ... cs
         DUP SREFS
-        REPEAT:<{
-            LDREF // ... ref cs
-            OVER HASHCU 1 GETGLOB EQUAL IFRETALT
-        }>
-        DROP // ...
+        REPEAT: LDREF 
     }>CONT
     <{ 2DROP	
-       <b b> PUSHREF PUSHNULL
+       <b b> PUSHREF
     }>CONT
     TRY 
-    DROP 1 PUSHINT ONLYTOPX
+    1 PUSHINT ONLYTOPX
+  }>
 """;
 
 ;; testable
