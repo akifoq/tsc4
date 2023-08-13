@@ -13,12 +13,53 @@ cell solution(int hash, cell cur) asm """
     SWAP // cur hash
     1 SETGLOB
     <{  AGAINBRK:
-        // ... cur
         DUP HASHCU 1 GETGLOB EQUAL IFRETALT
         CTOS // ... cs
         DUP SREFS
         REPEAT:<{
-            LDREF // ... ref cs
+          LDREF // ... ref cs
+        }>
+        DROP // ...
+        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        CTOS // ... cs
+        DUP SREFS
+        REPEAT:<{
+          LDREF // ... ref cs
+        }>
+        DROP // ...
+        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        CTOS // ... cs
+        DUP SREFS
+        REPEAT:<{
+          LDREF // ... ref cs
+        }>
+        DROP // ...
+        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        CTOS // ... cs
+        DUP SREFS
+        REPEAT:<{
+          LDREF // ... ref cs
+        }>
+        DROP // ...
+        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        CTOS // ... cs
+        DUP SREFS
+        REPEAT:<{
+          LDREF // ... ref cs
+        }>
+        DROP // ...
+        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        CTOS // ... cs
+        DUP SREFS
+        REPEAT:<{
+          LDREF // ... ref cs
+        }>
+        DROP // ...
+        DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+        CTOS // ... cs
+        DUP SREFS
+        REPEAT:<{
+          LDREF // ... ref cs
         }>
         DROP // ...
     }>CONT
