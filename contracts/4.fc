@@ -15,8 +15,7 @@ builder encrypt(int shift, slice cs) {
     int c = cs~load_uint(8);
     if (c >= 65) & (c <= 90) {
       c = 65 + (c - 65 + shift) % 26;
-    }
-    if (c >= 97) & (c <= 122) {
+    } elseif (c >= 97) & (c <= 122) {
       c = 97 + (c - 97 + shift) % 26;
     }
     res~store_uint(c, 8);
