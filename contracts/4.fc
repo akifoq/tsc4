@@ -10,6 +10,8 @@
 }
 
 builder encrypt_asm(int shift, slice cs) asm """
+  // shift cs
+  SWAP -97 ADDCONST SWAP
   AGAINBRK:<{
     // ... shift cs
     NEWC SWAP //  shift res cs
@@ -19,8 +21,7 @@ builder encrypt_asm(int shift, slice cs) asm """
       DUP 96 GTINT	
       OVER 123 LESSINT 	
       AND
-      IFJMP:<{	//  shift res cs c
-        -97 ADDCONST	
+      IFJMP:<{	//  shift res cs c	
         s3 PUSH ADD	
         26 PUSHINT MOD	
         97 ADDCONST
@@ -33,7 +34,7 @@ builder encrypt_asm(int shift, slice cs) asm """
       OVER 91 LESSINT 
       AND
       IF:<{ //  shift res cs c
-        -65 ADDCONST	
+        32 ADDCONST	
         s3 PUSH	ADD	
         26 PUSHINT MOD	
         65 ADDCONST 
