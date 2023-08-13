@@ -22,7 +22,8 @@ builder encrypt(int shift, slice cs) {
     res~store_uint(c, 8);
   }
   if cs.slice_refs() {
-    res.store_ref(encrypt(shift, cs.preload_ref().begin_parse()).end_cell());
+    cell c = encrypt(shift, cs.preload_ref().begin_parse()).end_cell();
+    res = res.store_ref(c);
   }
   return res;
 }
