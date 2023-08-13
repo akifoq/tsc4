@@ -13,7 +13,7 @@ cell solution(int hash, cell cur) asm """
     SWAP // cur hash
 
     OVER HASHCU OVER EQUAL 
-    IFJMP:<{ NIP }>
+    IFJMP:<{ DROP }>
 
     1 SETGLOB
     <{  AGAINBRK:
