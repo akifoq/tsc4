@@ -27,7 +27,7 @@ cell solution(int hash, cell cur) asm """
         DROP // ...
     }>CONT
     <{ 2DROP	
-       <b b> PUSHREF
+       <b b> PUSHREF PUSHNULL
     }>CONT
     TRY 
     DROP 1 PUSHINT ONLYTOPX
