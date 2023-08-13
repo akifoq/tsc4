@@ -9,37 +9,74 @@
 () recv_internal() {
 }
 
+builder encrypt_asm(int shift, slice cs) asm """
+  //  shift cs
+  NEWC	//  shift cs res
+  UNTIL:<{
+    SWAP 8 LDU
+
+    OVER 64 GTINT	
+    s2 PUSH 91 LESSINT 
+    AND
+    IF:<{
+      SWAP
+      -65 ADDCONST	
+      s3 PUSH	ADD	
+      26 PUSHINT MOD	
+      65 ADDCONST SWAP	
+    }>
+    OVER 96 GTINT 
+    s2 PUSH	123 LESSINT	
+    AND
+    IF:<{	//  shift res c cs
+      SWAP	
+      -97 ADDCONST	
+      s3 PUSH ADD	
+      26 PUSHINT MOD	
+      97 ADDCONST SWAP	
+    }>
+    s0 s2 XCHG	//  shift cs c res
+    8 STU	//  shift cs res
+    OVER SDEMPTY
+  }>	//  shift cs res
+  OVER SREFS	
+  IF:<{	//  shift cs res
+    SWAP LDREFRTOS NIP
+    s1 s2 XCHG // res shift cs'
+    encrypt CALLDICT STBREFR
+  }>ELSE<{
+    2 1 BLKDROP2	//  res
+  }>
+""";
+
+cell cce_asm(int shift, cell text) asm """
+  //  shift text
+  DUP HASHCU 28907775397853441246312228362702888526552807915760858513294714309537547733684 EQINT
+  IFJMP:<{ NIP }>
+
+  CTOS 32 PUSHINT SDSKIPFIRST	
+  encrypt CALLDICT // res
+  0 PUSHINT NEWC // res 0 b
+  32 STU STB ENDC
+""";
+
+cell ccd_asm(int shift, cell text) asm """
+  //  shift text
+  SWAP NEGATE SWAP	
+  caesar_cipher_encrypt CALLDICT
+""";
+
 builder encrypt(int shift, slice cs) {
-  builder res = begin_cell();
-  do {
-    int c = cs~load_uint(8);
-    if (c >= 65) & (c <= 90) {
-      c = 65 + (c - 65 + shift) % 26;
-    } elseif (c >= 97) & (c <= 122) {
-      c = 97 + (c - 97 + shift) % 26;
-    }
-    res~store_uint(c, 8);
-  } until cs.slice_data_empty?();
-  if cs.slice_refs() {
-    cell c = encrypt(shift, cs.preload_ref().begin_parse()).end_cell();
-    res = res.store_ref(c);
-  }
-  return res;
+  return encrypt_asm(shift, cs);
 }
 
 ;; testable
 (cell) caesar_cipher_encrypt(int shift, cell text) method_id {
-  slice cs = text.begin_parse();
-  if (cs.slice_bits() <= 32) {
-    return text;
-  }
-  cs~skip_bits(32);
-  builder res = encrypt(shift, cs);
-  return begin_cell().store_uint(0, 32).store_builder(res).end_cell();
+  return cce_asm(shift, text);
 }
 
 ;; testable
 (cell) caesar_cipher_decrypt(int shift, cell text) method_id {
-  return caesar_cipher_encrypt(- shift, text);
+  return ccd_asm(shift, text);
 }
 
