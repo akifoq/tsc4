@@ -30,21 +30,22 @@ tuple solution(int n, int k) asm """
   2dup add-fib
   tuck +
   } 369 times add-fib
-
   94611056096305838013295371573764256526437182762229865607320618320601813254535 constant 370Fib
+  370Fib 0 add-fib
   
   //  n k
   TUCK 0 EQINT	
   IFJMP:<{ 2DROP NIL }>
-  DUP 370 EQINT 
-  IFJMP:<{ 2DROP 370Fib PUSHINT SINGLE }>
 
   dict @ 9 DICTPUSHCONST DICTUGETEXEC ROT	// a b k
 
-  DEC REPEAT:<{
+  DUP 1 EQINT 
+  IFJMP:<{ 2DROP SINGLE }>
+
+  DEC DEC REPEAT:<{
       2DUP ADD
   }>
-  DROP DEPTH TUPLEVAR
+  DEPTH TUPLEVAR
 """;
 
 ;; testable
