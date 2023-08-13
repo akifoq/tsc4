@@ -9,13 +9,35 @@
 () recv_internal() {
 }
 
+builder store_builder(builder b, builder b') asm(b' b) "STB";
+
+builder encrypt(int shift, slice cs) {
+  builder res = begin_cell();
+  while ~ cs.slice_data_empty?() {
+    int c = cs~load_uint(8);
+    if (c >= 65) & (c <= 90) {
+      c = 65 + (c - 65 + shift) % 26;
+    }
+    if (c >= 97) & (c <= 122) {
+      c = 97 + (c - 97 + shift) % 26;
+    }
+    res.store_uint(c, 8);
+  }
+  if cs.slice_refs() {
+    res.store_ref(encrypt(shift, cs.preload_ref().begin_parse()).end_cell());
+  }
+  return res;
+}
+
 ;; testable
 (cell) caesar_cipher_encrypt(int shift, cell text) method_id {
-  return begin_cell().end_cell();
+  slice cs = text.begin_parse();
+  cs~skip_bits(32);
+  return begin_cell().store_uint(0, 32).store_builder(encrypt(shift, cs)).end_cell();
 }
 
 ;; testable
 (cell) caesar_cipher_decrypt(int shift, cell text) method_id {
-  return begin_cell().end_cell();
+  return caesar_cipher_encrypt(- shift, text);
 }
 
