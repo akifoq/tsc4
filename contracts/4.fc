@@ -11,15 +11,14 @@
 
 builder encrypt_asm(tuple t, slice cs) asm """
   // tuple cs
-  SWAP 1 SETGLOB // cs
+  SWAP c7 POP // cs
   AGAINBRK:<{
     // ... cs
     NEWC SWAP // res cs
     DUP SBITS 3 RSHIFT#
     REPEAT:<{
       8 LDU // res c cs
-      1 GETGLOB ROT // res cs tuple c
-      INDEXVAR // res cs c'
+      SWAP GETGLOBVAR // res cs c'
 
       ROT STSLICE // cs res
       SWAP
