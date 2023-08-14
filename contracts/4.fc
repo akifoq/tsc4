@@ -11,23 +11,24 @@
 
 builder encrypt_asm(tuple t, slice cs) asm """
   // tuple cs
+  SWAP 1 SETGLOB // cs
   AGAINBRK:<{
-    // ... tuple cs
-    NEWC SWAP //  tuple res cs
-    UNTIL:<{
-      8 LDU SWAP // tuple res cs c
-      s3 s(-1) PUXC // tuple res cs tuple c
-      INDEXVAR // tuple res cs c'
+    // ... cs
+    NEWC SWAP // res cs
+    DUP SBITS 3 RSHIFT#
+    REPEAT:<{
+      8 LDU // res c cs
+      1 GETGLOB ROT // res cs tuple c
+      INDEXVAR // res cs c'
 
-      ROT 8 STU // tuple cs res
-      s1 s0 XCPU SDEMPTY // tuple res cs
-    }>	//  tuple res cs
+      ROT STSLICE // cs res
+      SWAP
+    }>	//  res cs
     DUP SREFS IFNOTRETALT
 
-    LDREFRTOS NIP // tuple res cs'
-    s1 s2 XCHG // ... res tuple cs'
-  }> // ... tuple res cs' 
-  DROP NIP // ... res
+    LDREFRTOS NIP // ... res cs'
+  }> // ... res cs' 
+  DROP // ... res
 
   DEPTH DEC REPEAT:<{
     STBREFR
@@ -35,40 +36,44 @@ builder encrypt_asm(tuple t, slice cs) asm """
 """;
 
 tuple gt_asm(int shift) asm """
-  // shift
-  1 SETGLOB
-  0 PUSHINT 
-  64 PUSHINT REPEAT:<{
-    DUP INC
-  }> // 0 .. 64
-  
-  1 GETGLOB 0 PUSHINT // shift c
-  26 PUSHINT REPEAT:<{
-    2DUP ADD 26 PUSHINT MOD 
-    65 ADDCONST -ROT // c' shift c
-    INC
-  }> 2DROP // 65..90
+  // b x -- b
+  { <b swap 8 u, b> <s PUSHSLICE } : add-num
 
-  91 PUSHINT // 91
-  DUP INC // 92
-  DUP INC // 93
-  DUP INC // 94
-  DUP INC // 95 
-  DUP INC // 96
+  // shift -- code
+  { =: shift
+    <{ 0
+    { tuck add-num swap 1+ } 64 times
+    add-num 
 
-  1 GETGLOB 0 PUSHINT // shift c
-  26 PUSHINT REPEAT:<{
-    2DUP ADD 26 PUSHINT MOD 
-    97 ADDCONST -ROT // c' shift c
-    INC
-  }> 2DROP // 97-122
+    0 { tuck @' shift + 26 mod 65 +
+        add-num swap 1+ } 26 times drop
 
-  123 PUSHINT 
-  131 PUSHINT REPEAT:<{
-    DUP INC
-  }> // 123..254
+    91 add-num
+    92 add-num
+    93 add-num
+    94 add-num
+    95 add-num
+    96 add-num
 
-  255 PUSHINT TUPLEVAR
+    0 { tuck @' shift + 26 mod 97 +
+        add-num swap 1+ } 26 times drop
+
+    123 { tuck add-num swap 1+ } 131 times
+    add-num 
+
+    255 PUSHINT TUPLEVAR }>s
+  } : gen-table 
+
+  variable dict
+  dictnew dict !
+
+  // v x -- 
+  { dict @ 5 udict! drop dict ! } : dict!+
+
+  0 { dup dup gen-table swap dict!+ 1+ } 26 times drop
+
+  // shift 
+  dict @ 5 DICTPUSHCONST DICTUGETEXEC
 """;
 
 builder encrypt(tuple t, slice cs) inline {
@@ -84,7 +89,7 @@ cell cce_asm(int shift, cell text) asm """
   DUP HASHCU 28907775397853441246312228362702888526552807915760858513294714309537547733684 EQINT
   IFJMP:<{ NIP }>
 
-  SWAP generate_tuple INLINECALLDICT SWAP // tuple text
+  SWAP 26 PUSHINT MOD generate_tuple INLINECALLDICT SWAP // tuple text
 
   CTOS 32 PUSHINT SDSKIPFIRST	
   encrypt INLINECALLDICT // res
