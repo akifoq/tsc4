@@ -9,45 +9,24 @@
 () recv_internal() {
 }
 
-builder encrypt_asm(int shift, slice cs) asm """
-  // shift cs
-  SWAP -97 ADDCONST SWAP
+builder encrypt_asm(tuple t, slice cs) asm """
+  // tuple cs
   AGAINBRK:<{
-    // ... shift cs
-    NEWC SWAP //  shift res cs
+    // ... tuple cs
+    NEWC SWAP //  tuple res cs
     UNTIL:<{
-      8 LDU SWAP // shift res cs c
+      8 LDU SWAP // tuple res cs c
+      s3 s(-1) PUXC // tuple res cs tuple c
+      INDEXVAR // tuple res cs c'
 
-      DUP 96 GTINT	
-      OVER 123 LESSINT 	
-      AND
-      IFJMP:<{	//  shift res cs c	
-        s3 PUSH ADD	
-        26 PUSHINT MOD	
-        97 ADDCONST
-
-        ROT 8 STU // shift cs res
-        s1 s0 XCPU SDEMPTY // shift res cs
-      }>
-
-      DUP 64 GTINT 
-      OVER 91 LESSINT 
-      AND
-      IF:<{ //  shift res cs c
-        32 ADDCONST	
-        s3 PUSH	ADD	
-        26 PUSHINT MOD	
-        65 ADDCONST 
-      }>
-
-      ROT 8 STU // shift cs res
-      s1 s0 XCPU SDEMPTY // shift res cs
-    }>	//  shift res cs
+      ROT 8 STU // tuple cs res
+      s1 s0 XCPU SDEMPTY // tuple res cs
+    }>	//  tuple res cs
     DUP SREFS IFNOTRETALT
 
-    LDREFRTOS NIP // shift res cs'
-    s1 s2 XCHG // ... res shift cs'
-  }> // ... shift res cs' 
+    LDREFRTOS NIP // tuple res cs'
+    s1 s2 XCHG // ... res tuple cs'
+  }> // ... tuple res cs' 
   DROP NIP // ... res
 
   DEPTH DEC REPEAT:<{
@@ -55,10 +34,57 @@ builder encrypt_asm(int shift, slice cs) asm """
   }>
 """;
 
+tuple gt_asm(int shift) asm """
+  // shift
+  1 SETGLOB
+  0 PUSHINT 
+  64 PUSHINT REPEAT:<{
+    DUP INC
+  }> // 0 .. 64
+  
+  1 GETGLOB 0 PUSHINT // shift c
+  26 PUSHINT REPEAT:<{
+    2DUP ADD 26 PUSHINT MOD 
+    65 ADDCONST -ROT // c' shift c
+    INC
+  }> 2DROP // 65..90
+
+  91 PUSHINT // 91
+  DUP INC // 92
+  DUP INC // 93
+  DUP INC // 94
+  DUP INC // 95 
+  DUP INC // 96
+
+  1 GETGLOB 0 PUSHINT // shift c
+  26 PUSHINT REPEAT:<{
+    2DUP ADD 26 PUSHINT MOD 
+    97 ADDCONST -ROT // c' shift c
+    INC
+  }> 2DROP // 97-122
+
+  123 PUSHINT 
+  131 PUSHINT REPEAT:<{
+    DUP INC
+  }> // 123..254
+
+  255 PUSHINT TUPLEVAR
+""";
+
+builder encrypt(tuple t, slice cs) inline {
+  return encrypt_asm(t, cs);
+}
+
+tuple generate_tuple(int shift) inline {
+  return gt_asm(shift);
+}
+
 cell cce_asm(int shift, cell text) asm """
   //  shift text
   DUP HASHCU 28907775397853441246312228362702888526552807915760858513294714309537547733684 EQINT
   IFJMP:<{ NIP }>
+
+  SWAP generate_tuple INLINECALLDICT SWAP // tuple text
 
   CTOS 32 PUSHINT SDSKIPFIRST	
   encrypt INLINECALLDICT // res
@@ -71,10 +97,6 @@ cell ccd_asm(int shift, cell text) asm """
   SWAP NEGATE SWAP	
   caesar_cipher_encrypt CALLDICT
 """;
-
-builder encrypt(int shift, slice cs) inline {
-  return encrypt_asm(shift, cs);
-}
 
 ;; testable
 (cell) caesar_cipher_encrypt(int shift, cell text) method_id {
