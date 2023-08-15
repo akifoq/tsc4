@@ -13,14 +13,65 @@
   starts with 10101000111111...
   The output should be a linked list where the first
   cell ends with ...10100001111, and the second cell starts with 11111000111111...
-
 -}
 
 () recv_internal() {
 }
 
+int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
+
+(int, slice) read_bits(slice text, int flen) {
+  int to_read = min(text.slice_bits(), flen);
+  int value = text~load_uint(to_read);
+
+  flen -= to_read;
+  if (flen == 0) { 
+    return (value, text);
+  }
+
+  if (text.slice_refs()) {
+    (int rest, slice text') = read_bits(text.preload_ref().begin_parse(), flen);
+    return ((value << flen) + rest, text');
+  }
+
+  return (0, null());
+}
+
+builder solve(int flag, int flen, slice value, slice text) {
+  while text.slice_data_empty?() {
+    if text.slice_refs_empty?() {
+      return begin_cell();
+    }
+    text = text.preload_ref().begin_parse();
+  }
+
+  (int x, slice text') = read_bits(text, flen);
+  builder res = null();
+  if (x == flag) {
+    res = begin_cell().store_slice(value);
+    text = text';
+  } else {
+    int bit = text~load_uint(1);
+    res = begin_cell().store_uint(bit, 1);
+  }
+
+  builder res' = solve(flag, flen, value, text);
+  if (res.can_store_bits?(res'.builder_bits())) {
+    res = res.store_builder(res');
+  } else {
+    res = res.store_ref(res'.end_cell());
+  }
+  return res;
+}
+
+int ubitsize(int x) asm "UBITSIZE";
+
 ;; testable
 (cell) find_and_replace(int flag, int value, cell linked_list) method_id {
-  return begin_cell().end_cell();
+  slice value' = begin_cell().store_uint(value, ubitsize(value)).end_cell().begin_parse();
+
+  builder res = solve(flag, ubitsize(flag), value', linked_list.begin_parse());
+
+  return res.end_cell();
 }
 
