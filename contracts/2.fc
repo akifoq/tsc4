@@ -15,13 +15,13 @@
 int len(tuple t) asm "TLEN";
 forall X -> (tuple, ()) ~setindex(tuple t, X x, int k) asm "SETINDEXVAR";
 
-global int n, m, p;
+global int n;
 
 ;; testable
 (tuple) matrix_multiplier(tuple matrixA, tuple matrixB) method_id {
   n = matrixA.len();
-  m = matrixA.at(0).len();
-  p = matrixB.at(0).len();
+  int m = matrixA.at(0).len();
+  int p = matrixB.at(0).len();
 
   tuple res_row = matrixB.at(0);
   int i = 0;
