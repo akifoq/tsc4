@@ -47,7 +47,7 @@ builder solve(int flag, int flen, slice value, slice text) {
 
   (int x, slice text') = read_bits(text, flen);
   builder res = null();
-  if (x == flag) {
+  if (~ text'.null?()) & (x == flag) {
     res = begin_cell().store_slice(value);
     text = text';
   } else {
