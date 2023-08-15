@@ -15,26 +15,25 @@
 int len(tuple t) asm "TLEN";
 forall X -> (tuple, ()) ~setindex(tuple t, X x, int k) asm "SETINDEXVAR";
 
-global int n;
+global int n, m, p;
+
+tuple gen_res() impure asm """
+  p GETGLOB REPEAT:<{
+    0 PUSHINT
+  }> p GETGLOB TUPLEVAR
+
+  n GETGLOB DEC REPEAT:<{
+    DUP
+  }> n GETGLOB TUPLEVAR
+""";
 
 ;; testable
 (tuple) matrix_multiplier(tuple matrixA, tuple matrixB) method_id {
-  int n = matrixA.len();
-  int m = matrixA.at(0).len();
-  int p = matrixB.at(0).len();
+  n = matrixA.len();
+  m = matrixA.at(0).len();
+  p = matrixB.at(0).len();
 
-  tuple res_row = matrixB.at(0);
-  int i = 0;
-  repeat(p) {
-    res_row~setindex(0, i);
-    i += 1;
-  }
-  tuple res = matrixA;
-  int i = 0;
-  repeat(n) {
-    res~setindex(res_row, i);
-    i += 1;
-  }
+  tuple res = gen_res();
 
   int i = 0;
   repeat(n) {
