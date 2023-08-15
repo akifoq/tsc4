@@ -12,48 +12,44 @@
 () recv_internal() {
 }
 
-int len(tuple t) asm "TLEN";
-forall X -> (tuple, ()) ~setindex(tuple t, X x, int k) asm "SETINDEXVAR";
-
 global int n, m, p;
+global tuple B;
 
-tuple gen_res() impure asm """
-  p GETGLOB REPEAT:<{
+tuple solution(tuple matrixA, tuple matrixB) asm """
+  //  A B
+  OVER TLEN	n SETGLOB
+  OVER 0 INDEX TLEN	m SETGLOB
+  DUP	0 INDEX	TLEN p SETGLOB
+  B SETGLOB
+
+  // A
+  0 PUSHINT
+  n GETGLOB	REPEAT:<{	//  ... A i
+    2DUP INDEXVAR // A i Ai
+    B GETGLOB SWAP // A i B Ai
+
     0 PUSHINT
-  }> p GETGLOB TUPLEVAR
+    p GETGLOB REPEAT:<{	//  A i ... B Ai j
+      0 PUSHINT	DUP 
+      m GETGLOB	REPEAT:<{	//  A i ... B Ai j k sum
+        s3 s1 PUSH2	INDEXVAR	//  A i ... B Ai j k sum Aik
+        s5 s2 PUSH2	INDEXVAR	//  A i ... B Ai j k sum Aik Bk
+        s4 PUSH INDEXVAR	//  A i ... B Ai j k sum Aik Bkj
+        MUL	ADD	//  A i ... B Ai j k sum
+        SWAP INC SWAP	
+      }> NIP //  A i ... B Ai j sum
+      3 -ROLL // A i ... sum B Ai j
+      INC	
+    }> // A i ... B Ai j
+    3 BLKDROP p GETGLOB TUPLEVAR // A i Ri
 
-  n GETGLOB DEC REPEAT:<{
-    DUP
-  }> n GETGLOB TUPLEVAR
+    -ROT INC // ... Ri A i
+  }> 2DROP // ...
+  n GETGLOB TUPLEVAR // res
 """;
 
 ;; testable
 (tuple) matrix_multiplier(tuple matrixA, tuple matrixB) method_id {
-  n = matrixA.len();
-  m = matrixA.at(0).len();
-  p = matrixB.at(0).len();
-
-  tuple res = gen_res();
-
-  int i = 0;
-  repeat(n) {
-    tuple row_A = matrixA.at(i);
-    int j = 0;
-    repeat(p) {
-      int k = 0;
-      int sum = 0;
-      repeat(m) { 
-        sum += row_A.at(k) * matrixB.at(k).at(j);
-        k += 1;
-      }
-      tuple row = res.at(i);
-      row~setindex(sum, j);
-      res~setindex(row, i);
-      j += 1;
-    }
-    i += 1;
-  }
-
-  return res;
+  return solution(matrixA, matrixB);
 }
 
