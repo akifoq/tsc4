@@ -19,7 +19,7 @@ global int n;
 
 ;; testable
 (tuple) matrix_multiplier(tuple matrixA, tuple matrixB) method_id {
-  n = matrixA.len();
+  int n = matrixA.len();
   int m = matrixA.at(0).len();
   int p = matrixB.at(0).len();
 
@@ -38,12 +38,13 @@ global int n;
 
   int i = 0;
   repeat(n) {
+    tuple row_A = matrixA.at(i);
     int j = 0;
     repeat(p) {
       int k = 0;
       repeat(m) { 
         tuple row = res.at(i);
-        row~setindex(row.at(j) + matrixA.at(i).at(k) * matrixB.at(k).at(j), j);
+        row~setindex(row_A.at(k) * matrixB.at(k).at(j) + row.at(j), j);
         res~setindex(row, i);
         k += 1;
       }
