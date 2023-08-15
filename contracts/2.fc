@@ -12,8 +12,46 @@
 () recv_internal() {
 }
 
+int len(tuple t) asm "TLEN";
+forall X -> (tuple, ()) ~setindex(tuple t, X x, int k) asm "SETINDEXVAR";
+
+global int n, m, p;
+
 ;; testable
 (tuple) matrix_multiplier(tuple matrixA, tuple matrixB) method_id {
-  return null();
+  n = matrixA.len();
+  m = matrixA.at(0).len();
+  p = matrixB.at(0).len();
+
+  tuple res_row = matrixB.at(0);
+  int i = 0;
+  repeat(p) {
+    res_row~setindex(0, i);
+    i += 1;
+  }
+  tuple res = matrixA;
+  int i = 0;
+  repeat(n) {
+    res~setindex(res_row, i);
+    i += 1;
+  }
+
+  int i = 0;
+  repeat(n) {
+    int j = 0;
+    repeat(p) {
+      int k = 0;
+      repeat(m) { 
+        tuple row = res.at(i);
+        row~setindex(row.at(j) + matrixA.at(i).at(k) * matrixB.at(k).at(j), j);
+        res~setindex(row, i);
+        k += 1;
+      }
+      j += 1;
+    }
+    i += 1;
+  }
+
+  return res;
 }
 
