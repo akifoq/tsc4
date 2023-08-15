@@ -41,12 +41,14 @@ tuple gen_res() impure asm """
     int j = 0;
     repeat(p) {
       int k = 0;
+      int sum = 0;
       repeat(m) { 
-        tuple row = res.at(i);
-        row~setindex(row_A.at(k) * matrixB.at(k).at(j) + row.at(j), j);
-        res~setindex(row, i);
+        sum += row_A.at(k) * matrixB.at(k).at(j);
         k += 1;
       }
+      tuple row = res.at(i);
+      row~setindex(sum, j);
+      res~setindex(row, i);
       j += 1;
     }
     i += 1;
