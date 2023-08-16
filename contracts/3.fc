@@ -49,7 +49,7 @@ builder solve(int flag, int flen, slice value, slice text) {
     text = text.preload_ref().begin_parse();
   }
 
-  (int x, slice text') = read_bits(text, flen, 2);
+  (int x, slice text') = read_bits(text, flen, 1);
   builder res = null();
   if (~ text'.null?()) & (x == flag) {
     res = begin_cell().store_slice(value);
