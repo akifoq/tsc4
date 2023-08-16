@@ -47,7 +47,7 @@ builder solve(int flag, int flen, slice value, slice text) {
       return begin_cell();
     }
     text = text.preload_ref().begin_parse();
-    if (text.slice_bits() < flen) {
+    if (text.slice_bits() < flen) & (text.slice_refs()) {
       throw(239 + 1);
     }
   }
