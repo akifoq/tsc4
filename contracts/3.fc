@@ -42,14 +42,14 @@ int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
 }
 
 builder solve(int flag, int flen, slice value, slice text) {
-  while text.slice_data_empty?() {
+  if text.slice_data_empty?() {
     if text.slice_refs_empty?() {
       return begin_cell();
     }
     text = text.preload_ref().begin_parse();
   }
 
-  (int x, slice text') = read_bits(text, flen, 1);
+  (int x, slice text') = read_bits(text, flen, 2);
   builder res = null();
   if (~ text'.null?()) & (x == flag) {
     res = begin_cell().store_slice(value);
