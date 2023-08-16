@@ -70,7 +70,7 @@ builder solve(int flag, slice value, slice text) {
   ifnot (text.slice_refs()) {
     (builders, res)~store(text);
   } else {
-    slice next = text.preload_ref().begin_parse();
+    slice next = text~load_ref().begin_parse();
     int tlen = text.slice_bits();
     int nlen = next.slice_bits();
     int ll = max(1, flen - nlen);
