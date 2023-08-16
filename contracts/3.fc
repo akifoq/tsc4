@@ -20,7 +20,11 @@
 
 int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
 
-(int, slice) read_bits(slice text, int flen) {
+(int, slice) read_bits(slice text, int flen, int md) {
+  if (md == 0) {
+    return (0, null());
+  }
+
   int to_read = min(text.slice_bits(), flen);
   int value = text~load_uint(to_read);
 
@@ -30,7 +34,7 @@ int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
   }
 
   if (text.slice_refs()) {
-    (int rest, slice text') = read_bits(text.preload_ref().begin_parse(), flen);
+    (int rest, slice text') = read_bits(text.preload_ref().begin_parse(), flen, md - 1);
     return ((value << flen) + rest, text');
   }
 
@@ -45,7 +49,7 @@ builder solve(int flag, int flen, slice value, slice text) {
     text = text.preload_ref().begin_parse();
   }
 
-  (int x, slice text') = read_bits(text, flen);
+  (int x, slice text') = read_bits(text, flen, 2);
   builder res = null();
   if (~ text'.null?()) & (x == flag) {
     res = begin_cell().store_slice(value);
