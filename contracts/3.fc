@@ -44,7 +44,9 @@ int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
 
 int ubitsize(int x) asm "UBITSIZE"; 
 
-builder solve(int flag, slice value, slice text) {
+global slice value;
+
+builder solve(int flag, slice text) {
   int flen = ubitsize(flag);
 
   tuple builders = null();
@@ -53,8 +55,9 @@ builder solve(int flag, slice value, slice text) {
   while (flen <= text.slice_bits()) {
     (slice text', int x) = text.load_uint(flen);
     
-    slice v = value;
+    slice v = null();
     if (x == flag) {
+      v = value;
       text = text';
     } else {
       v = text~load_bit();
@@ -80,8 +83,9 @@ builder solve(int flag, slice value, slice text) {
       (slice next', int xl) = next.load_uint(cnt);
       int x = (xu << cnt) + xl;
 
-      slice v = value;
+      slice v = null();
       if (x == flag) {
+        v = value;
         next = next';
         tlen = 0;
       } else {
@@ -94,7 +98,7 @@ builder solve(int flag, slice value, slice text) {
       (builders, res)~store(text);
     }
 
-    builder res' = solve(flag, value, next);
+    builder res' = solve(flag, next);
     (builders, res)~store_b(res');
   }
 
@@ -107,10 +111,10 @@ builder solve(int flag, slice value, slice text) {
 }
 
 ;; testable
-(cell) find_and_replace(int flag, int value, cell linked_list) method_id {
-  slice value' = begin_cell().store_uint(value, ubitsize(value)).end_cell().begin_parse();
+(cell) find_and_replace(int flag, int _value, cell linked_list) method_id {
+  value = begin_cell().store_uint(_value, ubitsize(_value)).end_cell().begin_parse();
 
-  builder res = solve(flag, value', linked_list.begin_parse());
+  builder res = solve(flag, linked_list.begin_parse());
 
   return res.end_cell();
 }
