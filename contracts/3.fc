@@ -20,61 +20,93 @@
 
 int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
 
-(int, slice) read_bits(slice text, int flen, int md) {
-  if (md == 0) {
-    return (0, null());
+(slice, slice) load_bit(slice cs) asm( -> 1 0) "1 LDSLICE";
+
+((tuple, builder), ()) ~store((tuple, builder) rs, slice v) inline_ref {
+  var (builders, res) = rs;
+  ifnot (res.can_store_bits?(v.slice_bits())) {
+    builders = cons(res, builders);
+    res = begin_cell();
   }
-
-  int to_read = min(text.slice_bits(), flen);
-  int value = text~load_uint(to_read);
-
-  flen -= to_read;
-  if (flen == 0) { 
-    return (value, text);
-  }
-
-  if (text.slice_refs()) {
-    (int rest, slice text') = read_bits(text.preload_ref().begin_parse(), flen, md - 1);
-    return ((value << flen) + rest, text');
-  }
-
-  return (0, null());
+  res = res.store_slice(v);
+  return ((builders, res), ());
 }
 
-builder solve(int flag, int flen, slice value, slice text) {
-  if text.slice_data_empty?() {
-    if text.slice_refs_empty?() {
-      return begin_cell();
-    }
-    text = text.preload_ref().begin_parse();
+((tuple, builder), ()) ~store_b((tuple, builder) rs, builder b) inline_ref {
+  var (builders, res) = rs;
+  ifnot (res.can_store_bits?(b.builder_bits())) {
+    builders = cons(res, builders);
+    res = begin_cell();
   }
-
-  (int x, slice text') = read_bits(text, flen, 2);
-  builder res = null();
-  if (~ text'.null?()) & (x == flag) {
-    res = begin_cell().store_slice(value);
-    text = text';
-  } else {
-    int bit = text~load_uint(1);
-    res = begin_cell().store_uint(bit, 1);
-  }
-
-  builder res' = solve(flag, flen, value, text);
-  if (res.can_store_bits?(res'.builder_bits())) {
-    res = res.store_builder(res');
-  } else {
-    res = res.store_ref(res'.end_cell());
-  }
-  return res;
+  res = res.store_builder(b);
+  return ((builders, res), ());
 }
 
 int ubitsize(int x) asm "UBITSIZE";
+
+builder solve(int flag, slice value, slice text) {
+  int flen = ubitsize(flag);
+
+  tuple builders = null();
+  builder res = begin_cell();
+
+  while (flen <= text.slice_bits()) {
+    (slice text', int x) = text.load_uint(flen);
+    
+    slice v = value;
+    if (x == flag) {
+      text = text';
+    } else {
+      v = text~load_bit();
+    }
+    ;; (builders, res)~store(v); -- replaced for efficency
+    ifnot (res.can_store_bits?(v.slice_bits())) {
+      builders = cons(res, builders);
+      res = begin_cell();
+    }
+    res = res.store_slice(v);
+  }
+
+  ifnot (text.slice_refs()) {
+    (builders, res)~store(text);
+  } else {
+    slice next = text.preload_ref().begin_parse();
+    int tlen = text.slice_bits();
+    int nlen = next.slice_bits();
+    int ll = max(1, flen - nlen);
+    while tlen >= ll {
+      int cnt = flen - tlen;
+      int xu = text.preload_uint(tlen);
+      (slice next', int xl) = next.load_uint(cnt);
+      int x = (xu << cnt) + xl;
+
+      slice v = value;
+      if (x == flag) {
+        next = next';
+        tlen = 0;
+      } else {
+        v = text~load_bit();
+        tlen -= 1;
+      }
+      (builders, res)~store(v);
+    }
+    builder res' = solve(flag, value, next);
+    (builders, res)~store_b(res');
+  }
+
+  while ~ builders.null?() {
+    builder res' = builders~list_next();
+    res = res'.store_ref(res.end_cell());
+  }
+
+  return res;
+}
 
 ;; testable
 (cell) find_and_replace(int flag, int value, cell linked_list) method_id {
   slice value' = begin_cell().store_uint(value, ubitsize(value)).end_cell().begin_parse();
 
-  builder res = solve(flag, ubitsize(flag), value', linked_list.begin_parse());
+  builder res = solve(flag, value', linked_list.begin_parse());
 
   return res.end_cell();
 }
