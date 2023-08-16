@@ -61,7 +61,11 @@ builder solve(int flag, int flen, slice value, slice text) {
   }
 
   builder res' = solve(flag, flen, value, text);
-  res = res.store_ref(res'.end_cell());
+  if (res.can_store_bits?(res'.builder_bits() + 42)) {
+    res = res.store_builder(res');
+  } else {
+    res = res.store_ref(res'.end_cell());
+  }
   return res;
 }
 
