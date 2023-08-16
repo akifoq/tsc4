@@ -43,6 +43,7 @@ int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
 
 builder solve(int flag, int flen, slice value, slice text) {
   while text.slice_data_empty?() {
+    
     if text.slice_refs_empty?() {
       return begin_cell();
     }
