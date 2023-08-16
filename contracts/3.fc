@@ -90,6 +90,8 @@ builder solve(int flag, slice value, slice text) {
       }
       (builders, res)~store(v);
     }
+    (builders, res)~store(text);
+
     builder res' = solve(flag, value, next);
     (builders, res)~store_b(res');
   }
