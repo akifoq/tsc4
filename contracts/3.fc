@@ -113,6 +113,10 @@ builder solve(int flag, slice text) {
 
 ;; testable
 (cell) find_and_replace(int flag, int _value, cell linked_list) method_id {
+  if (ubitsize(_value) > ubitsize(flag)) {
+    throw(239);
+  }
+
   value = begin_cell().store_uint(_value, ubitsize(_value)).end_cell().begin_parse();
 
   builder res = solve(flag, linked_list.begin_parse());
