@@ -60,76 +60,93 @@ builder solve_asm(int flat, slice text) asm """
   }> DROP //  f t fl blds res
 
 
-  s3 PUSH	SREFS	
+  s3 PUSH	//  f t fl blds res t
+  SREFS	//  f t fl blds res _24
   IF:<{	//  f t fl blds res
-    s0 s3 XCHG LDREFRTOS	//  f res fl blds t nxt
-    DUP	SBITS	//  f res fl blds t nxt nlen
-    
-    s4 s(-1) PUXC	SUB	
-    1 PUSHINT	MAX	//  f res fl blds t nxt ll
-
+    s0 s3 XCHG	//  f res fl blds t
+    LDREF	//  f res fl blds _31 t
+    SWAP	//  f res fl blds t _31
+    CTOS	//  f res fl blds t next
+    OVER	//  f res fl blds t next t
+    SBITS	//  f res fl blds t next tlen
+    OVER	//  f res fl blds t next tlen next
+    SBITS	//  f res fl blds t next tlen nlen
+    s5 PUSH
+    1 PUSHINT
+    s0 s2 XCHG	//  f res fl blds t next tlen _39=1 fl nlen
+    SUB	//  f res fl blds t next tlen _39=1 _40
+    MAX	//  f res fl blds t next tlen ll
     WHILE:<{
-      s2 PUSH	SBITS	
-      OVER GEQ	
-    }>DO<{	//  f res fl blds t nxt ll
-      s2 PUSH	SBITS	//  f res fl blds t nxt ll tlen
-
-      s5 s0 PUSH2	SUB	//  f res fl blds t nxt ll tlen cnt
-
-      s4 s1 PUXC PLDUX	//  f res fl blds t nxt ll cnt xu
-
-      s3 s1 PUSH2	LDUX	//  f res fl blds t nxt ll cnt xu xl nxt'
-      s2 s3 XCHG2	LSHIFT ADD	//  f res fl blds t nxt ll nxt' x
-
-      s8 PUSH	EQUAL	
-      IF:<{	//  f res fl blds t nxt ll nxt'
-        2 1 BLKDROP2	//  f res fl blds t nxt'
-        value GETGLOB	//  f res fl blds t nxt v
-        10 PUSHPOW2	//  f res fl blds t nxt v ll=1024
-      }>ELSE<{	//  f res fl blds t nxt ll nxt'
-        DROP	//  f res fl blds t nxt ll
-        s0 s2 XCHG	//  f res fl blds ll nxt t
-        1 LDSLICE	//  f res fl blds ll nxt v t
-        s3 s3 XCHG2	//  f res fl blds t nxt ll v
+      2DUP	//  f res fl blds t next tlen ll tlen ll
+      GEQ	//  f res fl blds t next tlen ll _42
+    }>DO<{	//  f res fl blds t next tlen ll
+      s5 s1 PUSH2	//  f res fl blds t next tlen ll fl tlen
+      SUB	//  f res fl blds t next tlen ll cnt
+      s4 s2 PUSH2	//  f res fl blds t next tlen ll cnt t tlen
+      PLDUX	//  f res fl blds t next tlen ll cnt xu
+      s4 s1 PUSH2	//  f res fl blds t next tlen ll cnt xu next cnt
+      LDUX	//  f res fl blds t next tlen ll cnt xu xl next'
+      s2 s3 XCHG2	//  f res fl blds t next tlen ll next' xl xu cnt
+      LSHIFT	//  f res fl blds t next tlen ll next' xl _51
+      SWAP	//  f res fl blds t next tlen ll next' _51 xl
+      ADD	//  f res fl blds t next tlen ll next' x
+      s9 PUSH	//  f res fl blds t next tlen ll next' x f
+      EQUAL	//  f res fl blds t next tlen ll next' _55
+      IF:<{	//  f res fl blds t next tlen ll next'
+        2 2 BLKDROP2	//  f res fl blds t ll next'
+        value GETGLOB	//  f res fl blds t ll next v
+        0 PUSHINT	//  f res fl blds t ll next v tlen=0
+      }>ELSE<{	//  f res fl blds t next tlen ll next'
+        DROP	//  f res fl blds t next tlen ll
+        s0 s3 XCHG	//  f res fl blds ll next tlen t
+        1 LDSLICE	//  f res fl blds ll next tlen v t
+        s0 s2 XCHG	//  f res fl blds ll next t v tlen
+        DEC	//  f res fl blds ll next t v tlen
+        s2 s4 XCHG
+        s2 s3 XCHG	//  f res fl blds t ll next v tlen
       }>
-
-      //  f res fl blds t nxt ll v
-      6 ROLL SWAP // f fl blds t nxt ll res v
-      STSLICERQ // .. res v -1 or res' 0
-      IF:<{
-        // f fl blds t nxt ll res v
-        s0 s5 XCHG CONS	// f fl v t nxt ll blds
-        s0 s4 XCHG // f fl blds t nxt ll v
-        NEWC STSLICE
-      }> // f fl blds t nxt ll res'
-      5 -ROLL // f res' fl blds t nxt ll
-    }> DROP	s3 POP	//  f res nxt blds t
-
-    DUP	SBITS	0 GTINT
-    IF:<{	//  f res nxt blds t
-      DUP	//  f res nxt blds t t
-      SBITS	//  f res nxt blds t _68
-      s4 s(-1) PUXC	//  f res nxt blds t res _68
-      BCHKBITSQ	//  f res nxt blds t _69
-      IFNOT:<{	//  f res nxt blds t
-        s3 s3 XCHG2	//  f t nxt res blds
-        CONS	//  f t nxt blds
-        NEWC	//  f t nxt blds res
-        s0 s3 XCHG	//  f res nxt blds t
-      }>	//  f res nxt blds t
-      s1 s3 XCHG	//  f blds nxt res t
-      STSLICER	//  f blds nxt res
-      s0 s2 XCHG	//  f res nxt blds
+      OVER	//  f res fl blds t ll next v tlen v
+      SBITS	//  f res fl blds t ll next v tlen _62
+      s8 s(-1) PUXC	//  f res fl blds t ll next v tlen res _62
+      BCHKBITSQ	//  f res fl blds t ll next v tlen _63
+      IFNOT:<{	//  f res fl blds t ll next v tlen
+        s7 s5 XCHG2	//  f v fl tlen t ll next res blds
+        CONS	//  f v fl tlen t ll next blds
+        NEWC	//  f v fl tlen t ll next blds res
+        s7 s7 XCHG2
+        s0 s5 XCHG	//  f res fl blds t ll next v tlen
+      }>	//  f res fl blds t ll next v tlen
+      s7 s7 XCHG2	//  f tlen fl blds t ll next res v
+      STSLICER	//  f tlen fl blds t ll next res
+      s1 s6 s6 XCHG3	//  f res fl blds t next tlen ll
+    }>	//  f res fl blds t next tlen ll
+    DROP
+    s4 POP	//  f res tlen blds t next
+    s0 s3 XCHG	//  f res next blds t tlen
+    0 GTINT	//  f res next blds t _68
+    IF:<{	//  f res next blds t
+      DUP	//  f res next blds t t
+      SBITS	//  f res next blds t _69
+      s4 s(-1) PUXC	//  f res next blds t res _69
+      BCHKBITSQ	//  f res next blds t _70
+      IFNOT:<{	//  f res next blds t
+        s3 s3 XCHG2	//  f t next res blds
+        CONS	//  f t next blds
+        NEWC	//  f t next blds res
+        s0 s3 XCHG	//  f res next blds t
+      }>	//  f res next blds t
+      s1 s3 XCHG	//  f blds next res t
+      STSLICER	//  f blds next res
+      s0 s2 XCHG	//  f res next blds
     }>ELSE<{
-      DROP	//  f res nxt blds
+      DROP	//  f res next blds
     }>
-
-    s3 s3 XCHG2	//  blds res f nxt
+    s3 s3 XCHG2	//  blds res f next
     solve CALLDICT	//  blds res res'
     DUP	//  blds res res' res'
-    BBITS	//  blds res res' _75
-    s2 s(-1) PUXC	//  blds res res' res _75
-    BCHKBITSQ	//  blds res res' _76
+    BBITS	//  blds res res' _76
+    s2 s(-1) PUXC	//  blds res res' res _76
+    BCHKBITSQ	//  blds res res' _77
     IFNOT:<{	//  blds res res'
       s0 s2 XCHG	//  res' res blds
       CONS	//  res' blds
@@ -153,7 +170,7 @@ builder solve_asm(int flat, slice text) asm """
     SWAP	//  blds res t
     STSLICER	//  blds res
   }>
-
+  
   WHILE:<{
     OVER	//  blds res blds
     ISNULL	//  blds res _81
