@@ -55,13 +55,12 @@ builder solve(int flag, slice text) {
   while (flen <= text.slice_bits()) {
     (slice text', int x) = text.load_uint(flen);
     
-    slice v = null();
+    slice v = text~load_bit();
     if (x == flag) {
       v = value;
       text = text';
-    } else {
-      v = text~load_bit();
     }
+    
     ;; (builders, res)~store(v); -- replaced for efficency
     ifnot res.can_store_bits?(v.slice_bits()) {
       builders = cons(res, builders);
