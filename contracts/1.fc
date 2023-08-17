@@ -10,15 +10,25 @@
 }
 
 cell solution(int hash, cell cur) asm """
-    // hash cur
-    SWAP 1 SETGLOB PUSHNULL
-    <{  AGAINBRK:
-        // ... cur
-        DROP DUP HASHCU 1 GETGLOB EQUAL IFRETALT
+    <{  PUSHNULL
+        AGAINBRK:
+        // ... cur cs
+        DROP DUP HASHCU 
+    }>s x{82F0} |+ constant pref
+
+    <{  EQUAL IFRETALT
         CTOS // ... cs
         DUP SREFS
         REPEAT: LDREF 
-    }>CONT
+    }>s constant suff
+
+    // hash cur
+    SWAP 
+    pref PUSHSLICE 
+    NEWC STSLICE
+    256 STU
+    suff PUSHSLICE STSLICER
+    ENDC CTOS BLESS
     <{ 2DROP	
        <b b> PUSHREF
     }>CONT
