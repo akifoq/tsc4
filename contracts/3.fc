@@ -54,8 +54,8 @@ builder solve_asm(int flat, slice text) asm """
     STSLICERQ // .. res v -1 or res' 0
     IF:<{ 
       s0 s2 XCHG CONS	// v blds
-      NEWC ROT // .. blds res v
-      STSLICER // .. blds res
+      NEWC s1 s2 XCHG // .. blds v res
+      STSLICE // .. blds res
     }>
   }> DROP //  f t fl blds res
 
