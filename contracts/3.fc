@@ -50,18 +50,13 @@ builder solve_asm(int flat, slice text) asm """
       s4 s4 XCHG2	//  f t fl blds res v
     }>
     
-    DUP	//  f t fl blds res v v
-    SBITS	//  f t fl blds res v _19
-    s2 s(-1) PUXC	//  f t fl blds res v res _19
-    BCHKBITSQ	//  f t fl blds res v _20
-    IFNOT:<{	//  f t fl blds res v
-      s0 s2 XCHG	//  f t fl v res blds
-      CONS	//  f t fl v blds
-      NEWC
-      ROT	//  f t fl blds res v
-    }>	//  f t fl blds res v
-
-    STSLICER	//  f t fl blds res
+    // f t fl blds res v
+    STSLICERQ // .. res v -1 or res' 0
+    IF:<{ 
+      s0 s2 XCHG CONS	// v blds
+      NEWC ROT // .. blds res v
+      STSLICER // .. blds res
+    }>
   }> DROP //  f t fl blds res
 
 
