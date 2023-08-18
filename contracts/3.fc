@@ -40,6 +40,8 @@ builder solve(int flag, slice text) {
   if (text.slice_refs()) {
     next = text~load_ref().begin_parse();
   }
+  flag~impure_touch();
+  text~impure_touch();
 
   int flen = ubitsize(flag);  
 
@@ -76,6 +78,7 @@ builder solve(int flag, slice text) {
         }
       }
     } else {
+      (builders, res)~store(text);
       text = next;
     }
   } until text.null?();
