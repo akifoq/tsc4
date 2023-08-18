@@ -83,11 +83,11 @@ builder solve_asm(int flat, slice text) asm """
       // f t fl blds res v
       STSLICERQ // .. res v -1 or res' 0
       IF:<{ 
-        s0 s2 XCHG CONS	// v blds
-        SWAP NEWC // .. blds v res
-        STSLICE // blds res
+        // .. next f t fl blds res v
+        NEWC STSLICE // .. next f t fl blds res res'
+        SWAP 6 ROLLREV // .. res next f t fl blds res'
       }>
-    }> //  f t fl blds res
+    }> // .. next f t fl blds res
     
     //  next f t fl blds res
     s5 PUSH	ISNULL IFRETALT
@@ -100,29 +100,21 @@ builder solve_asm(int flat, slice text) asm """
 
   }>	//  next f t fl blds res
   //  next f t fl blds res
+  NIP
+  //  ... next f t fl res
   
-  s2 POP s4 POP s2 POP	//  blds res t
-  STSLICERQ // .. res v -1 or res' 0
-  IF:<{ 
-    s0 s2 XCHG CONS	// v blds
-    SWAP NEWC // .. blds v res
-    STSLICE // blds res
-  }>
-  // blds res	
+  NIP s3 POP NIP
+  // .. res t
 
-  WHILE:<{
-    OVER	//  blds res blds
-    ISNULL	//  blds res _38
-    NOT	//  blds res _39
-  }>DO<{	//  blds res
-    SWAP	//  res blds
-    UNCONS	//  res res' blds
-    s0 s2 XCHG	//  blds res' res
-    ENDC	//  blds res' _43
-    SWAP	//  blds _43 res'
-    STREF	//  blds res
-  }>	//  blds res
-  NIP	//  res
+  STSLICERQ // .. res t -1 or res' 0
+  IF:<{ 
+    // .. res t
+    NEWC STSLICE // .. res res'
+  }>
+
+  DEPTH DEC REPEAT:<{
+    STBREFR
+  }>
 """;
 
 builder solve(int flag, slice text) {
