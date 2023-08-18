@@ -27,172 +27,156 @@ int ubitsize(int x) asm "UBITSIZE";
 global slice value;
 
 builder solve_asm(int flat, slice text) asm """
-  { =: flen
-    <{
-      //  f t
-      PUSHNULL	//  f t blds
-      NEWC	//  f t blds res
-      UNTIL:<{
-        // f t blds res
-        @' flen PUSHINT -ROT
-        // f t fl blds res
+  //  f t
+  OVER	//  f t f
+  UBITSIZE	//  f t fl
+  PUSHNULL	//  f t fl blds
+  NEWC	//  f t fl blds res
+  UNTIL:<{
+    // f t fl blds res
+    
+    AGAINBRK:<{
+      // f t fl blds res
+      2OVER	LDUXQ	IFNOTRETALT
+      // f t fl blds res x t'
 
-        AGAINBRK:<{
-          // f t fl blds res
-          2OVER	LDUXQ	IFNOTRETALT
-          // f t fl blds res x t'
+      s1 s6 XCPU	//  f t fl blds res t' x f
 
-          s1 s6 XCPU	//  f t fl blds res t' x f
+      EQUAL	//  f t fl blds res t' _15
+      IF:<{	//  f t fl blds res t'
+        s4 POP	//  f t' fl blds res
+        value GETGLOB	//  f t fl blds res v
+      }>ELSE<{	//  f t fl blds res t'
+        DROP	//  f t fl blds res
+        s0 s3 XCHG	//  f res fl blds t
+        1 LDSLICE	//  f res fl blds v t
+        s4 s4 XCHG2	//  f t fl blds res v
+      }>
 
-          EQUAL	//  f t fl blds res t' _15
-          IF:<{	//  f t fl blds res t'
-            s4 POP	//  f t' fl blds res
-            value GETGLOB	//  f t fl blds res v
-          }>ELSE<{	//  f t fl blds res t'
-            DROP	//  f t fl blds res
-            s0 s3 XCHG	//  f res fl blds t
-            1 LDSLICE	//  f res fl blds v t
-            s4 s4 XCHG2	//  f t fl blds res v
-          }>
+      // f t fl blds res v
+      STSLICERQ // .. res v -1 or res' 0
+      IF:<{ 
+        s0 s2 XCHG CONS	// v blds
+        SWAP NEWC // .. blds v res
+        STSLICE // blds res
+      }>
+    }> DROP //  f t fl blds res
 
-          // f t fl blds res v
-          STSLICERQ // .. res v -1 or res' 0
-          IF:<{ 
-            s0 s2 XCHG CONS	// v blds
-            SWAP NEWC // .. blds v res
-            STSLICE // blds res
-          }>
-        }> DROP //  f t fl blds res
-        ROT DROP // // f t blds res
 
-        FALSE	//  f t blds res e?
-        s3 PUSH	//  f t blds res e? t
-        SREFS	//  f t blds res e? _26
-        IF:<{	//  f t blds res e?
-          s0 s3 XCHG	//  f e? blds res t
-          LDREF	//  f e? blds res _34 t
-          SWAP	//  f e? blds res t _34
-          CTOS	//  f e? blds res t next
-          OVER	//  f e? blds res t next t
-          SBITS	//  f e? blds res t next tlen
-          OVER	//  f e? blds res t next tlen next
-          SBITS	//  f e? blds res t next tlen nlen
-          1 PUSHINT	//  f e? blds res t next tlen nlen _42=1
-          @' flen PUSHINT
-          ROT	//  f e? blds res t next tlen _42=1 _43=71 nlen
-          SUB	//  f e? blds res t next tlen _42=1 _44
-          MAX	//  f e? blds res t next tlen ll
-          WHILE:<{
-            2DUP	//  f e? blds res t next tlen ll tlen ll
-            GEQ	//  f e? blds res t next tlen ll _46
-          }>DO<{	//  f e? blds res t next tlen ll
-            @' flen PUSHINT	//  f e? blds res t next tlen ll _48=71
-            s2 PUSH	//  f e? blds res t next tlen ll _48=71 tlen
-            SUB	//  f e? blds res t next tlen ll cnt
-            s4 s2 PUSH2	//  f e? blds res t next tlen ll cnt t tlen
-            PLDUX	//  f e? blds res t next tlen ll cnt xu
-            s4 s1 PUSH2	//  f e? blds res t next tlen ll cnt xu next cnt
-            LDUX	//  f e? blds res t next tlen ll cnt xu xl next'
-            s2 s3 XCHG2	//  f e? blds res t next tlen ll next' xl xu cnt
-            LSHIFT	//  f e? blds res t next tlen ll next' xl _56
-            SWAP	//  f e? blds res t next tlen ll next' _56 xl
-            ADD	//  f e? blds res t next tlen ll next' x
-            s9 PUSH	//  f e? blds res t next tlen ll next' x f
-            EQUAL	//  f e? blds res t next tlen ll next' _60
-            IF:<{	//  f e? blds res t next tlen ll next'
-              2 2 BLKDROP2	//  f e? blds res t ll next'
-              value GETGLOB	//  f e? blds res t ll next v
-              0 PUSHINT	//  f e? blds res t ll next v tlen=0
-            }>ELSE<{	//  f e? blds res t next tlen ll next'
-              DROP	//  f e? blds res t next tlen ll
-              s0 s3 XCHG	//  f e? blds res ll next tlen t
-              1 LDSLICE	//  f e? blds res ll next tlen v t
-              s0 s2 XCHG	//  f e? blds res ll next t v tlen
-              DEC	//  f e? blds res ll next t v tlen
-              s2 s4 XCHG
-              s2 s3 XCHG	//  f e? blds res t ll next v tlen
-            }>
-            OVER	//  f e? blds res t ll next v tlen v
-            SBITS	//  f e? blds res t ll next v tlen _67
-            s6 s(-1) PUXC	//  f e? blds res t ll next v tlen res _67
-            BCHKBITSQ	//  f e? blds res t ll next v tlen _68
-            IFNOT:<{	//  f e? blds res t ll next v tlen
-              s5 s6 XCHG2	//  f e? tlen v t ll next res blds
-              CONS	//  f e? tlen v t ll next blds
-              s0 s5 XCHG
-              NEWC
-              s5 s5 XCHG2	//  f e? blds res t ll next v tlen
-            }>	//  f e? blds res t ll next v tlen
-            s5 s5 XCHG2	//  f e? blds tlen t ll next res v
-            STSLICER	//  f e? blds tlen t ll next res
-            s1 s4 s4 XCHG3	//  f e? blds res t next tlen ll
-          }>	//  f e? blds res t next tlen ll
-          DROP	//  f e? blds res t next tlen
-          0 GTINT	//  f e? blds res t next _73
-          IF:<{	//  f e? blds res t next
-            OVER	//  f e? blds res t next t
-            SBITS	//  f e? blds res t next _74
-            s3 s(-1) PUXC	//  f e? blds res t next res _74
-            BCHKBITSQ	//  f e? blds res t next _75
-            IFNOT:<{	//  f e? blds res t next
-              s2 s3 XCHG2	//  f e? next t res blds
-              CONS	//  f e? next t blds
-              s0 s2 XCHG
-              NEWC
-              -ROT	//  f e? blds res t next
-            }>	//  f e? blds res t next
-            -ROT	//  f e? blds next res t
-            STSLICER	//  f e? blds next res
-            SWAP	//  f e? blds res next
-          }>ELSE<{
-            NIP	//  f e? blds res next
-          }>	//  f e? blds res t
-        }>ELSE<{	//  f t blds res e?
-          DROP	//  f t blds res
-          s2 PUSH	//  f t blds res t
-          SBITS	//  f t blds res _27
-          s1 s(-1) PUXC	//  f t blds res res _27
-          BCHKBITSQ	//  f t blds res _28
-          IFNOT:<{	//  f t blds res
-            SWAP	//  f t res blds
-            CONS	//  f t blds
-            NEWC	//  f t blds res
-          }>	//  f t blds res
-          s2 PUSH	//  f t blds res t
-          STSLICER	//  f t blds res
-          TRUE	//  f t blds res e?
-          s0 s3 XCHG	//  f e? blds res t
-        }>
-        s0 s3 XCHG	//  f t blds res e?
-      }>	//  f t blds res
-      2 2 BLKDROP2	//  blds res
+    FALSE	//  f t fl blds res end_loop?
+    s4 PUSH	//  f t fl blds res end_loop? t
+    SREFS	//  f t fl blds res end_loop? _26
+    IF:<{	//  f t fl blds res end_loop?
+      s0 s4 XCHG	//  f end_loop? fl blds res t
+      LDREF	//  f end_loop? fl blds res _34 t
+      SWAP	//  f end_loop? fl blds res t _34
+      CTOS	//  f end_loop? fl blds res t next
+      OVER	//  f end_loop? fl blds res t next t
+      SBITS	//  f end_loop? fl blds res t next tlen
+      OVER	//  f end_loop? fl blds res t next tlen next
+      SBITS	//  f end_loop? fl blds res t next tlen nlen
+      s6 PUSH
+      1 PUSHINT
+      s0 s2 XCHG	//  f end_loop? fl blds res t next tlen _42=1 fl nlen
+      SUB	//  f end_loop? fl blds res t next tlen _42=1 _43
+      MAX	//  f end_loop? fl blds res t next tlen ll
       WHILE:<{
-        OVER	//  blds res blds
-        ISNULL	//  blds res _79
-        NOT	//  blds res _80
-      }>DO<{	//  blds res
-        SWAP	//  res blds
-        UNCONS	//  res res' blds
-        s0 s2 XCHG	//  blds res' res
-        ENDC	//  blds res' _84
-        SWAP	//  blds _84 res'
-        STREF	//  blds res
-      }>	//  blds res
-      NIP	//  res 
-    }>s 
-  } : gencode 
-
-  variable dict
-  dictnew dict !
-
-  // v x -- 
-  { dict @ 7 udict! drop dict ! } : dict!+
-
-  1 { dup dup gencode swap 1- dict!+ 1+ } 128 times drop
-
-  // f t
-  OVER UBITSIZE DEC // f t fl-1
-  dict @ 7 DICTPUSHCONST DICTUGETJMP
+        2DUP	//  f end_loop? fl blds res t next tlen ll tlen ll
+        GEQ	//  f end_loop? fl blds res t next tlen ll _45
+      }>DO<{	//  f end_loop? fl blds res t next tlen ll
+        s6 s1 PUSH2	//  f end_loop? fl blds res t next tlen ll fl tlen
+        SUB	//  f end_loop? fl blds res t next tlen ll cnt
+        s4 s2 PUSH2	//  f end_loop? fl blds res t next tlen ll cnt t tlen
+        PLDUX	//  f end_loop? fl blds res t next tlen ll cnt xu
+        s4 s1 PUSH2	//  f end_loop? fl blds res t next tlen ll cnt xu next cnt
+        LDUX	//  f end_loop? fl blds res t next tlen ll cnt xu xl next'
+        s2 s3 XCHG2	//  f end_loop? fl blds res t next tlen ll next' xl xu cnt
+        LSHIFT	//  f end_loop? fl blds res t next tlen ll next' xl _54
+        SWAP	//  f end_loop? fl blds res t next tlen ll next' _54 xl
+        ADD	//  f end_loop? fl blds res t next tlen ll next' x
+        s10 PUSH	//  f end_loop? fl blds res t next tlen ll next' x f
+        EQUAL	//  f end_loop? fl blds res t next tlen ll next' _58
+        IF:<{	//  f end_loop? fl blds res t next tlen ll next'
+          2 2 BLKDROP2	//  f end_loop? fl blds res t ll next'
+          value GETGLOB	//  f end_loop? fl blds res t ll next v
+          0 PUSHINT	//  f end_loop? fl blds res t ll next v tlen=0
+        }>ELSE<{	//  f end_loop? fl blds res t next tlen ll next'
+          DROP	//  f end_loop? fl blds res t next tlen ll
+          s0 s3 XCHG	//  f end_loop? fl blds res ll next tlen t
+          1 LDSLICE	//  f end_loop? fl blds res ll next tlen v t
+          s0 s2 XCHG	//  f end_loop? fl blds res ll next t v tlen
+          DEC	//  f end_loop? fl blds res ll next t v tlen
+          s2 s4 XCHG
+          s2 s3 XCHG	//  f end_loop? fl blds res t ll next v tlen
+        }>
+        OVER	//  f end_loop? fl blds res t ll next v tlen v
+        SBITS	//  f end_loop? fl blds res t ll next v tlen _65
+        s6 s(-1) PUXC	//  f end_loop? fl blds res t ll next v tlen res _65
+        BCHKBITSQ	//  f end_loop? fl blds res t ll next v tlen _66
+        IFNOT:<{	//  f end_loop? fl blds res t ll next v tlen
+          s5 s6 XCHG2	//  f end_loop? fl tlen v t ll next res blds
+          CONS	//  f end_loop? fl tlen v t ll next blds
+          s0 s5 XCHG
+          NEWC
+          s5 s5 XCHG2	//  f end_loop? fl blds res t ll next v tlen
+        }>	//  f end_loop? fl blds res t ll next v tlen
+        s5 s5 XCHG2	//  f end_loop? fl blds tlen t ll next res v
+        STSLICER	//  f end_loop? fl blds tlen t ll next res
+        s1 s4 s4 XCHG3	//  f end_loop? fl blds res t next tlen ll
+      }>	//  f end_loop? fl blds res t next tlen ll
+      DROP	//  f end_loop? fl blds res t next tlen
+      0 GTINT	//  f end_loop? fl blds res t next _71
+      IF:<{	//  f end_loop? fl blds res t next
+        OVER	//  f end_loop? fl blds res t next t
+        SBITS	//  f end_loop? fl blds res t next _72
+        s3 s(-1) PUXC	//  f end_loop? fl blds res t next res _72
+        BCHKBITSQ	//  f end_loop? fl blds res t next _73
+        IFNOT:<{	//  f end_loop? fl blds res t next
+          s2 s3 XCHG2	//  f end_loop? fl next t res blds
+          CONS	//  f end_loop? fl next t blds
+          s0 s2 XCHG
+          NEWC
+          -ROT	//  f end_loop? fl blds res t next
+        }>	//  f end_loop? fl blds res t next
+        -ROT	//  f end_loop? fl blds next res t
+        STSLICER	//  f end_loop? fl blds next res
+        SWAP	//  f end_loop? fl blds res next
+      }>ELSE<{
+        NIP	//  f end_loop? fl blds res next
+      }>	//  f end_loop? fl blds res t
+    }>ELSE<{	//  f t fl blds res end_loop?
+      DROP	//  f t fl blds res
+      s3 PUSH	//  f t fl blds res t
+      SBITS	//  f t fl blds res _27
+      s1 s(-1) PUXC	//  f t fl blds res res _27
+      BCHKBITSQ	//  f t fl blds res _28
+      IFNOT:<{	//  f t fl blds res
+        SWAP	//  f t fl res blds
+        CONS	//  f t fl blds
+        NEWC	//  f t fl blds res
+      }>	//  f t fl blds res
+      s3 PUSH	//  f t fl blds res t
+      STSLICER	//  f t fl blds res
+      TRUE	//  f t fl blds res end_loop?
+      s0 s4 XCHG	//  f end_loop? fl blds res t
+    }>
+    s0 s4 XCHG	//  f t fl blds res end_loop?
+  }>	//  f t fl blds res
+  2 2 BLKDROP2
+  s2 POP	//  res blds
+  WHILE:<{
+    DUP	//  res blds blds
+    ISNULL	//  res blds _77
+    NOT	//  res blds _78
+  }>DO<{	//  res blds
+    UNCONS	//  res res' blds
+    s0 s2 XCHG	//  blds res' res
+    ENDC	//  blds res' _82
+    SWAP	//  blds _82 res'
+    STREF	//  blds res
+    SWAP	//  res blds
+  }>	//  res blds
+  DROP	//  res
 """;
 
 builder solve(int flag, slice text) {
