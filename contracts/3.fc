@@ -58,30 +58,28 @@ builder solve_asm(int flat, slice text) asm """
   }>	//  f t next
   s2 s2 s1 XC2PU	//  next f t f
   UBITSIZE	//  next f t fl
-  NEWC -ROT //  next f res t fl  
+  NEWC //  next f t fl res
 
   AGAINBRK:<{
-    // .. next f res t fl
+    // .. next f t fl res
 
     AGAINBRK:<{
-      // f res t fl
-      2DUP LDUXQ IFNOTRETALT
-      // f res t fl x t'
+      // f t fl res
+      s2 s1 PUSH2 LDUXQ IFNOTRETALT
+      // f t fl res x t'
 
-      s1 s5 XCPU	//  f res t fl t' x f
+      s1 s5 XCPU	//  f t fl res t' x f
 
       EQUAL
-      IF:<{	// f res t fl t'
-        s2 POP	//  f res t' fl 
-        value GETGLOB	//  f res t' fl v
-      }>ELSE<{	// f res t fl t'
-        DROP	//  f res t fl
-        SWAP	//  f res fl t
-        1 LDSLICE	//  f res fl v t
-        -ROT
+      IF:<{	// f t fl res t'
+        s3 POP	//  f t' fl res
+        value GETGLOB	//  f t' fl res v
+      }>ELSE<{	// f t fl res t'
+        DROP	//  f t fl res
+        ROT // f fl res t
+        1 LDSLICE	//  f fl res v t
+        3 -ROLL
       }>
-      // f res t' fl v
-      s1 s3 s0 XCHG3
       // f t fl res v
 
       STSLICERQ // .. res v -1 or res' 0
@@ -91,23 +89,20 @@ builder solve_asm(int flat, slice text) asm """
         SWAP 5 ROLLREV // .. res next f t fl res'
       }>
       // f t fl res
-      -ROT
-      // f res t fl
-    }> DROP //  f res t fl 
+    }> DROP //  f t fl res
     
-    //  next f res t fl
+    //  next f t fl res
     s4 PUSH	ISNULL IFRETALT
     
-    //  next f res t fl
-    s0 s4 XCHG	//  fl f res t next
-    ~reshape_slices INLINECALLDICT	//  fl f res t next
-    s0 s4 XCHG
-    //  next f res t fl
+    //  next f t fl res
+    s2 s4 XCHG2	//  res f fl t next
+    ~reshape_slices INLINECALLDICT	//  res f fl t next
+    s2 s4 XCHG2
+    //  next f t fl res
   }>
-  //  ... next f res t fl
+  //  ... next f t fl res
   
-  DROP
-  2 2 BLKDROP2
+  NIP s3 POP NIP
   // .. res t
 
   STSLICERQ // .. res t -1 or res' 0
@@ -118,7 +113,7 @@ builder solve_asm(int flat, slice text) asm """
 
   DEPTH DEC REPEAT:<{
     STBREFR
-  }> 
+  }>
 """;
 
 builder solve(int flag, slice text) {
