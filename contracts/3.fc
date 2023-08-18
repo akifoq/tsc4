@@ -26,86 +26,161 @@ int ubitsize(int x) asm "UBITSIZE";
 
 global slice value;
 
+builder solve_asm(int flat, slice text) asm """
+  //  f t
+  OVER	//  f t f
+  UBITSIZE	//  f t fl
+  PUSHNULL	//  f t fl blds
+  NEWC	//  f t fl blds res
+  UNTIL:<{
+    // f t fl blds res
+    
+    AGAINBRK:<{
+      // f t fl blds res
+      2OVER	LDUXQ	IFNOTRETALT
+      // f t fl blds res x t'
+
+      s1 s6 XCPU	//  f t fl blds res t' x f
+
+      EQUAL	//  f t fl blds res t' _15
+      IF:<{	//  f t fl blds res t'
+        s4 POP	//  f t' fl blds res
+        value GETGLOB	//  f t fl blds res v
+      }>ELSE<{	//  f t fl blds res t'
+        DROP	//  f t fl blds res
+        s0 s3 XCHG	//  f res fl blds t
+        1 LDSLICE	//  f res fl blds v t
+        s4 s4 XCHG2	//  f t fl blds res v
+      }>
+
+      // f t fl blds res v
+      STSLICERQ // .. res v -1 or res' 0
+      IF:<{ 
+        s0 s2 XCHG CONS	// v blds
+        SWAP NEWC // .. blds v res
+        STSLICE // blds res
+      }>
+    }> DROP //  f t fl blds res
+
+
+    FALSE	//  f t fl blds res end_loop?
+    s4 PUSH	//  f t fl blds res end_loop? t
+    SREFS	//  f t fl blds res end_loop? _26
+    IF:<{	//  f t fl blds res end_loop?
+      s0 s4 XCHG	//  f end_loop? fl blds res t
+      LDREF	//  f end_loop? fl blds res _34 t
+      SWAP	//  f end_loop? fl blds res t _34
+      CTOS	//  f end_loop? fl blds res t next
+      OVER	//  f end_loop? fl blds res t next t
+      SBITS	//  f end_loop? fl blds res t next tlen
+      OVER	//  f end_loop? fl blds res t next tlen next
+      SBITS	//  f end_loop? fl blds res t next tlen nlen
+      s6 PUSH
+      1 PUSHINT
+      s0 s2 XCHG	//  f end_loop? fl blds res t next tlen _42=1 fl nlen
+      SUB	//  f end_loop? fl blds res t next tlen _42=1 _43
+      MAX	//  f end_loop? fl blds res t next tlen ll
+      WHILE:<{
+        2DUP	//  f end_loop? fl blds res t next tlen ll tlen ll
+        GEQ	//  f end_loop? fl blds res t next tlen ll _45
+      }>DO<{	//  f end_loop? fl blds res t next tlen ll
+        s6 s1 PUSH2	//  f end_loop? fl blds res t next tlen ll fl tlen
+        SUB	//  f end_loop? fl blds res t next tlen ll cnt
+        s4 s2 PUSH2	//  f end_loop? fl blds res t next tlen ll cnt t tlen
+        PLDUX	//  f end_loop? fl blds res t next tlen ll cnt xu
+        s4 s1 PUSH2	//  f end_loop? fl blds res t next tlen ll cnt xu next cnt
+        LDUX	//  f end_loop? fl blds res t next tlen ll cnt xu xl next'
+        s2 s3 XCHG2	//  f end_loop? fl blds res t next tlen ll next' xl xu cnt
+        LSHIFT	//  f end_loop? fl blds res t next tlen ll next' xl _54
+        SWAP	//  f end_loop? fl blds res t next tlen ll next' _54 xl
+        ADD	//  f end_loop? fl blds res t next tlen ll next' x
+        s10 PUSH	//  f end_loop? fl blds res t next tlen ll next' x f
+        EQUAL	//  f end_loop? fl blds res t next tlen ll next' _58
+        IF:<{	//  f end_loop? fl blds res t next tlen ll next'
+          2 2 BLKDROP2	//  f end_loop? fl blds res t ll next'
+          value GETGLOB	//  f end_loop? fl blds res t ll next v
+          0 PUSHINT	//  f end_loop? fl blds res t ll next v tlen=0
+        }>ELSE<{	//  f end_loop? fl blds res t next tlen ll next'
+          DROP	//  f end_loop? fl blds res t next tlen ll
+          s0 s3 XCHG	//  f end_loop? fl blds res ll next tlen t
+          1 LDSLICE	//  f end_loop? fl blds res ll next tlen v t
+          s0 s2 XCHG	//  f end_loop? fl blds res ll next t v tlen
+          DEC	//  f end_loop? fl blds res ll next t v tlen
+          s2 s4 XCHG
+          s2 s3 XCHG	//  f end_loop? fl blds res t ll next v tlen
+        }>
+        OVER	//  f end_loop? fl blds res t ll next v tlen v
+        SBITS	//  f end_loop? fl blds res t ll next v tlen _65
+        s6 s(-1) PUXC	//  f end_loop? fl blds res t ll next v tlen res _65
+        BCHKBITSQ	//  f end_loop? fl blds res t ll next v tlen _66
+        IFNOT:<{	//  f end_loop? fl blds res t ll next v tlen
+          s5 s6 XCHG2	//  f end_loop? fl tlen v t ll next res blds
+          CONS	//  f end_loop? fl tlen v t ll next blds
+          s0 s5 XCHG
+          NEWC
+          s5 s5 XCHG2	//  f end_loop? fl blds res t ll next v tlen
+        }>	//  f end_loop? fl blds res t ll next v tlen
+        s5 s5 XCHG2	//  f end_loop? fl blds tlen t ll next res v
+        STSLICER	//  f end_loop? fl blds tlen t ll next res
+        s1 s4 s4 XCHG3	//  f end_loop? fl blds res t next tlen ll
+      }>	//  f end_loop? fl blds res t next tlen ll
+      DROP	//  f end_loop? fl blds res t next tlen
+      0 GTINT	//  f end_loop? fl blds res t next _71
+      IF:<{	//  f end_loop? fl blds res t next
+        OVER	//  f end_loop? fl blds res t next t
+        SBITS	//  f end_loop? fl blds res t next _72
+        s3 s(-1) PUXC	//  f end_loop? fl blds res t next res _72
+        BCHKBITSQ	//  f end_loop? fl blds res t next _73
+        IFNOT:<{	//  f end_loop? fl blds res t next
+          s2 s3 XCHG2	//  f end_loop? fl next t res blds
+          CONS	//  f end_loop? fl next t blds
+          s0 s2 XCHG
+          NEWC
+          -ROT	//  f end_loop? fl blds res t next
+        }>	//  f end_loop? fl blds res t next
+        -ROT	//  f end_loop? fl blds next res t
+        STSLICER	//  f end_loop? fl blds next res
+        SWAP	//  f end_loop? fl blds res next
+      }>ELSE<{
+        NIP	//  f end_loop? fl blds res next
+      }>	//  f end_loop? fl blds res t
+    }>ELSE<{	//  f t fl blds res end_loop?
+      DROP	//  f t fl blds res
+      s3 PUSH	//  f t fl blds res t
+      SBITS	//  f t fl blds res _27
+      s1 s(-1) PUXC	//  f t fl blds res res _27
+      BCHKBITSQ	//  f t fl blds res _28
+      IFNOT:<{	//  f t fl blds res
+        SWAP	//  f t fl res blds
+        CONS	//  f t fl blds
+        NEWC	//  f t fl blds res
+      }>	//  f t fl blds res
+      s3 PUSH	//  f t fl blds res t
+      STSLICER	//  f t fl blds res
+      TRUE	//  f t fl blds res end_loop?
+      s0 s4 XCHG	//  f end_loop? fl blds res t
+    }>
+    s0 s4 XCHG	//  f t fl blds res end_loop?
+  }>	//  f t fl blds res
+  2 2 BLKDROP2
+  s2 POP	//  res blds
+  WHILE:<{
+    DUP	//  res blds blds
+    ISNULL	//  res blds _77
+    NOT	//  res blds _78
+  }>DO<{	//  res blds
+    UNCONS	//  res res' blds
+    s0 s2 XCHG	//  blds res' res
+    ENDC	//  blds res' _82
+    SWAP	//  blds _82 res'
+    STREF	//  blds res
+    SWAP	//  res blds
+  }>	//  res blds
+  DROP	//  res
+""";
 
 builder solve(int flag, slice text) {
-  int flen = ubitsize(flag);  
-
-  tuple builders = null();
-  builder res = begin_cell();
-
-  do {
-    while (flen <= text.slice_bits()) {
-      (slice text', int x) = text.load_uint(flen);
-      
-      slice v = null();
-      if (x == flag) {
-        v = value;
-        text = text';
-      } else {
-        v = text~load_bit();
-      }
-      
-      ;; (builders, res)~store(v); -- replaced for efficency
-      ifnot res.can_store_bits?(v.slice_bits()) {
-        builders = cons(res, builders);
-        res = begin_cell();
-      }
-      res = res.store_slice(v);
-    } 
-
-    int end_loop? = false;
-    ifnot (text.slice_refs()) {
-      ifnot res.can_store_bits?(text.slice_bits()) {
-        builders = cons(res, builders);
-        res = begin_cell();
-      }
-      res = res.store_slice(text);
-      end_loop? = true;
-    } else {
-      slice next = text~load_ref().begin_parse();
-      int tlen = text.slice_bits();
-      int nlen = next.slice_bits();
-      int ll = max(1, flen - nlen);
-      while tlen >= ll {
-        int cnt = flen - tlen;
-        int xu = text.preload_uint(tlen);
-        (slice next', int xl) = next.load_uint(cnt);
-        int x = (xu << cnt) + xl;
-
-        slice v = null();
-        if (x == flag) {
-          v = value;
-          next = next';
-          tlen = 0;
-        } else {
-          v = text~load_bit();
-          tlen -= 1;
-        }
-        ;; (builders, res)~store(v);
-        ifnot res.can_store_bits?(v.slice_bits()) {
-          builders = cons(res, builders);
-          res = begin_cell();
-        }
-        res = res.store_slice(v);
-      }
-      if (tlen > 0) {
-        ;; (builders, res)~store(text);
-        ifnot res.can_store_bits?(text.slice_bits()) {
-          builders = cons(res, builders);
-          res = begin_cell();
-        }
-        res = res.store_slice(text);
-      }
-      text = next;
-    }
-  } until end_loop?;
-
-  while ~ builders.null?() {
-    builder res' = builders~list_next();
-    res = res'.store_ref(res.end_cell());
-  }
-
-  return res;
+  return solve_asm(flag, text);
 }
 
 ;; testable
