@@ -156,6 +156,7 @@ builder solve_asm(int flat, slice text) asm """
     ISNULL	//  f res fl blds t _75
     s1 s4 XCHG	//  f t fl blds res _75
   }>	//  f t fl blds res
+  
   2 2 BLKDROP2
   s2 POP	//  res blds
   WHILE:<{
