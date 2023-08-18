@@ -64,32 +64,31 @@ builder solve_asm(int flat, slice text) asm """
   AGAINBRK:<{
     // f t fl blds res
     2OVER	PLDUXQ IF:<{
-      UNTIL:<{    
-        // f t fl blds res x
+      UNTIL:
+      // f t fl blds res x
 
-        s5 PUSH	//  f t fl blds res x f
+      s5 PUSH	//  f t fl blds res x f
 
-        EQUAL	//  f t fl blds res _15
-        IF:<{	//  f t fl blds res 
-          2OVER SDSKIPFIRST // f t fl blds res t' 
-          s4 POP	//  f t' fl blds res
-          value GETGLOB	//  f t fl blds res v
-        }>ELSE<{	//  f t fl blds res 
-          s0 s3 XCHG	//  f res fl blds t
-          1 LDSLICE	//  f res fl blds v t
-          s4 s4 XCHG2	//  f t fl blds res v
-        }>
-
-        // f t fl blds res v
-        STSLICERQ // .. res v -1 or res' 0
-        IF:<{ 
-          // .. next f t fl blds res v
-          NEWC STSLICE // .. next f t fl blds res res'
-          SWAP 6 ROLLREV // .. res next f t fl blds res'
-        }>
-
-        2OVER	PLDUXQ NOT
+      EQUAL	//  f t fl blds res _15
+      IF:<{	//  f t fl blds res 
+        2OVER SDSKIPFIRST // f t fl blds res t' 
+        s4 POP	//  f t' fl blds res
+        value GETGLOB	//  f t fl blds res v
+      }>ELSE<{	//  f t fl blds res 
+        s0 s3 XCHG	//  f res fl blds t
+        1 LDSLICE	//  f res fl blds v t
+        s4 s4 XCHG2	//  f t fl blds res v
       }>
+
+      // f t fl blds res v
+      STSLICERQ // .. res v -1 or res' 0
+      IF:<{ 
+        // .. next f t fl blds res v
+        NEWC STSLICE // .. next f t fl blds res res'
+        SWAP 6 ROLLREV // .. res next f t fl blds res'
+      }>
+
+      2OVER	PLDUXQ NOT
     }> // .. next f t fl blds res
     
     //  next f t fl blds res
