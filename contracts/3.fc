@@ -20,162 +20,72 @@
 
 int can_store_bits?(builder b, int bits) asm "BCHKBITSQ";
 
-(slice, slice) load_bit(slice cs) asm( -> 1 0) "1 LDSLICE";
-
 int ubitsize(int x) asm "UBITSIZE"; 
 
 global slice value;
 
-builder solve_asm(int flat, slice text) asm """
-  //  f t
-  OVER	//  f t f
-  UBITSIZE	//  f t fl
-  PUSHNULL	//  f t fl blds
-  NEWC	//  f t fl blds res
-  UNTIL:<{
-      AGAINBRK:<{
-      // f t fl blds res
-      2OVER	LDUXQ	IFNOTRETALT
-      // f t fl blds res x t'
-
-      s1 s6 XCPU	//  f t fl blds res t' x f
-
-      EQUAL	//  f t fl blds res t' _15
-      IF:<{	//  f t fl blds res t'
-        s4 POP	//  f t' fl blds res
-        value GETGLOB	//  f t fl blds res v
-      }>ELSE<{	//  f t fl blds res t'
-        DROP	//  f t fl blds res
-        s0 s3 XCHG	//  f res fl blds t
-        1 LDSLICE	//  f res fl blds v t
-        s4 s4 XCHG2	//  f t fl blds res v
-      }>
-
-      // f t fl blds res v
-      STSLICERQ // .. res v -1 or res' 0
-      IF:<{ 
-        s0 s2 XCHG CONS	// v blds
-        SWAP NEWC // .. blds v res
-        STSLICE // blds res
-      }>
-    }> DROP //  f t fl blds res
-
-    s3 PUSH SREFS
-    IF:<{	//  f t fl blds res
-      s0 s3 XCHG	//  f res fl blds t
-      
-      LDREFRTOS //  f res fl blds t next
-      
-      OVER SBITS	
-      OVER SBITS	//  f res fl blds t next tlen nlen
-
-      s5 s(-1) PUXC // f res fl blds t next tlen fl nlen
-      SUB 1 PUSHINT MAX //  f res fl blds t next tlen ll
-
-      WHILE:<{
-        //  f res fl blds t next tlen ll
-        2DUP GEQ
-      }>DO<{	
-        //  f res fl blds t next tlen ll
-
-        // cnt = flen - tlen
-        s5 s1 PUSH2 SUB // f res fl blds t next tlen ll cnt
-
-        // xu = text.preload_uint(tlen)
-        s4 s2 PUSH2 PLDUX	//  f res fl blds t next tlen ll cnt xu
-        
-        // (next', xl) = next.load_uint(cnt)
-        s4 s1 PUSH2 LDUX	//  f res fl blds t next tlen ll cnt xu xl next'
-
-        // x = (xu << cnt) + xl
-        s2 s3 XCHG2	//  f res fl blds t next tlen ll next' xl xu cnt
-        LSHIFT ADD	//  f res fl blds t next tlen ll next' x
-        
-        s9 PUSH EQUAL	// .. next' x=f?
-        IF:<{	//  f res fl blds t next tlen ll next'
-          2 2 BLKDROP2	//  f res fl blds t ll next'
-          value GETGLOB	//  f res fl blds t ll next v
-          0 PUSHINT	//  f res fl blds t ll next v tlen=0
-        }>ELSE<{	//  f res fl blds t next tlen ll next'
-          DROP	//  f res fl blds t next tlen ll
-          s0 s3 XCHG	//  f res fl blds ll next tlen t
-          1 LDSLICE	//  f res fl blds ll next tlen v t
-          s0 s2 XCHG	//  f res fl blds ll next t v tlen
-          DEC	//  f res fl blds ll next t v tlen
-          s2 s4 XCHG
-          s2 s3 XCHG	//  f res fl blds t ll next v tlen
-        }>
-        
-        s5 s7 s7 XCHG3	//  flag tlen flen next text ll builders res v
-        STSLICERQ // .. res v -1 or res' 0
-        IF:<{ 
-          s0 s2 XCHG CONS	// v blds
-          SWAP NEWC // .. blds v res
-          STSLICE // blds res
-        }>
-        //  flag tlen flen next text ll builders res
-        s6 s6 XCHG2
-        s4 s1 s4 XCHG3	//  flag res flen builders text next tlen ll
-        
-      }>	//  f res fl blds t next tlen ll
-      DROP	//  f res fl blds t next tlen
-      0 GTINT	//  f res fl blds t next _69
-      IF:<{	//  f res fl blds t next
-        OVER	//  f res fl blds t next t
-        SBITS	//  f res fl blds t next _70
-        s5 s(-1) PUXC	//  f res fl blds t next res _70
-        BCHKBITSQ	//  f res fl blds t next _71
-        IFNOT:<{	//  f res fl blds t next
-          s4 s2 XCHG2	//  f t fl next res blds
-          CONS	//  f t fl next blds
-          NEWC	//  f t fl next blds res
-          s1 s4 s4 XCHG3	//  f res fl blds t next
-        }>	//  f res fl blds t next
-        s4 s4 XCHG2	//  f next fl blds res t
-        STSLICER	//  f next fl blds res
-        s0 s3 XCHG	//  f res fl blds next
-      }>ELSE<{
-        NIP	//  f res fl blds next
-      }>	//  f res fl blds t
-    }>ELSE<{	//  f t fl blds res
-      s3 PUSH	//  f t fl blds res t
-      SBITS	//  f t fl blds res _25
-      s1 s(-1) PUXC	//  f t fl blds res res _25
-      BCHKBITSQ	//  f t fl blds res _26
-      IFNOT:<{	//  f t fl blds res
-        SWAP	//  f t fl res blds
-        CONS	//  f t fl blds
-        NEWC	//  f t fl blds res
-      }>	//  f t fl blds res
-      s0 s3 XCHG2	//  f blds fl res t
-      STSLICER	//  f blds fl res
-      s0 s2 XCHG
-      PUSHNULL	//  f res fl blds t
-    }>
-    DUP	//  f res fl blds t t
-    ISNULL	//  f res fl blds t _75
-    s1 s4 XCHG	//  f t fl blds res _75
-  }>	//  f t fl blds res
-  
-  2 2 BLKDROP2
-  s2 POP	//  res blds
-  WHILE:<{
-    DUP	//  res blds blds
-    ISNULL	//  res blds _76
-    NOT	//  res blds _77
-  }>DO<{	//  res blds
-    UNCONS	//  res res' blds
-    s0 s2 XCHG	//  blds res' res
-    ENDC	//  blds res' _81
-    SWAP	//  blds _81 res'
-    STREF	//  blds res
-    SWAP	//  res blds
-  }>	//  res blds
-  DROP	//  res
+((tuple, builder), ()) ~store((tuple, builder) br, slice v) asm """
+  // builders res v
+  STSLICERQ // .. res v -1 or res' 0
+  IF:<{ 
+    s0 s2 XCHG CONS	// v blds
+    SWAP NEWC // .. blds v res
+    STSLICE // blds res
+  }>
+  // builders res
 """;
 
 builder solve(int flag, slice text) {
-  return solve_asm(flag, text);
+  slice next = null();
+  if (text.slice_refs()) {
+    next = text~load_ref().begin_parse();
+  }
+
+  int flen = ubitsize(flag);  
+
+  tuple builders = null();
+  builder res = begin_cell();
+
+  do {
+    while (flen <= text.slice_bits()) {
+      (slice text', int x) = text.load_uint(flen);
+      
+      slice v = null();
+      if (x == flag) {
+        v = value;
+        text = text';
+      } else {
+        v = text~load_bits(1);
+      }
+      
+      (builders, res)~store(v); 
+    } 
+
+    ifnot next.null?() {
+      int nlen = next.slice_bits();
+      int plen = min(nlen, 1023 - text.slice_bits());
+      slice pref = next~load_bits(plen);
+      builder b = begin_cell().store_slice(text).store_slice(pref);
+      text = b.end_cell().begin_parse();
+
+      if next.slice_data_empty?() {
+        if next.slice_refs() {
+          next = next.preload_ref().begin_parse();
+        } else {
+          next = null();
+        }
+      }
+    } else {
+      text = next;
+    }
+  } until text.null?();
+
+  while ~ builders.null?() {
+    builder res' = builders~list_next();
+    res = res'.store_ref(res.end_cell());
+  }
+
+  return res;
 }
 
 ;; testable
