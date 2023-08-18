@@ -26,6 +26,25 @@ int ubitsize(int x) asm "UBITSIZE";
 
 global slice value;
 
+((slice, slice), ()) ~reshape_slices((slice, slice) tn) inline_ref {
+  (slice text, slice next) = tn;
+  
+  int nlen = next.slice_bits();
+  int plen = min(nlen, 1023 - text.slice_bits());
+  slice pref = next~load_bits(plen);
+  builder b = begin_cell().store_slice(text).store_slice(pref);
+  text = b.end_cell().begin_parse();
+
+  if next.slice_data_empty?() {
+    if next.slice_refs() {
+      next = next.preload_ref().begin_parse();
+    } else {
+      next = null();
+    }
+  }
+  return ((text, next), ());
+}
+
 builder solve_asm(int flat, slice text) asm """
   //  f t
   PUSHNULL	//  f t next
@@ -41,7 +60,7 @@ builder solve_asm(int flat, slice text) asm """
   UBITSIZE	//  next f t fl
   PUSHNULL	//  next f t fl blds
   NEWC	//  next f t fl blds res
-  UNTIL:<{
+  AGAINBRK:<{
     AGAINBRK:<{
       // f t fl blds res
       2OVER	LDUXQ	IFNOTRETALT
@@ -70,70 +89,37 @@ builder solve_asm(int flat, slice text) asm """
     }> DROP //  f t fl blds res
     
     //  next f t fl blds res
+    s5 PUSH	ISNULL IFRETALT
+    
+    //  next f t fl blds res
+    s3 s5 XCHG2	//  res f blds fl t next
+    ~reshape_slices INLINECALLDICT	//  res f blds fl t next
+    s3 s5 XCHG2
+    //  next f t fl blds res
 
-    s5 PUSH	//  next f t fl blds res next
-    ISNULL	//  next f t fl blds res _32
-    IF:<{	//  next f t fl blds res
-      3 ROLL	//  next f fl blds res t
-        // blds res v
-        STSLICERQ // .. res v -1 or res' 0
-        IF:<{ 
-          s0 s2 XCHG CONS	// v blds
-          SWAP NEWC // .. blds v res
-          STSLICE // blds res
-        }>
-        // blds res	//  next f fl blds res
-      s4 PUSH	//  next f fl blds res t
-    }>ELSE<{	//  next f t fl blds res
-      s5 PUSH	//  next f t fl blds res next
-      SBITS	//  next f t fl blds res nlen
-      10 PUSHPOW2DEC	//  next f t fl blds res nlen _36=1023
-      s5 PUSH	//  next f t fl blds res nlen _36=1023 t
-      SBITS	//  next f t fl blds res nlen _36=1023 _37
-      SUB	//  next f t fl blds res nlen _38
-      MIN	//  next f t fl blds res plen
-      s1 s6 XCHG	//  res f t fl blds next plen
-      LDSLICEX	//  res f t fl blds pref next
-      NEWC	//  res f t fl blds pref next _44
-      s0 s5 XCHG2	//  res f next fl blds pref _44 t
-      STSLICER	//  res f next fl blds pref _45
-      SWAP	//  res f next fl blds _45 pref
-      STSLICER	//  res f next fl blds b
-      ENDC	//  res f next fl blds _47
-      CTOS	//  res f next fl blds t
-      s3 PUSH	//  res f next fl blds t next
-      SDEMPTY	//  res f next fl blds t _49
-      IF:<{	//  res f next fl blds t
-        s3 PUSH	//  res f next fl blds t next
-        SREFS	//  res f next fl blds t _50
-        IF:<{	//  res f next fl blds t
-          s0 s3 XCHG	//  res f t fl blds next
-          PLDREF	//  res f t fl blds _51
-          CTOS	//  res f t fl blds next
-        }>ELSE<{	//  res f next fl blds t
-          s3 POP	//  res f t fl blds
-          PUSHNULL	//  res f t fl blds next
-        }>
-        s0 s3 XCHG	//  res f next fl blds t
-      }>	//  res f next fl blds t
-      s3 s5 XCHG
-      s1 s3 s0 XCHG3	//  next f fl blds res t
-    }>
-    DUP	//  next f fl blds res t t
-    ISNULL	//  next f fl blds res t _56
-    s1 s4 XCHG
-    s3 s3 s0 XCHG3	//  next f t fl blds res _56
   }>	//  next f t fl blds res
-  4 2 BLKDROP2	//  blds res
+  //  next f t fl blds res
+  
+  s2 POP s4 POP s2 POP	//  blds res t
+  STSLICERQ // .. res v -1 or res' 0
+  IF:<{ 
+    s0 s2 XCHG CONS	// v blds
+    SWAP NEWC // .. blds v res
+    STSLICE // blds res
+  }>
+  // blds res	
+
   WHILE:<{
     OVER	//  blds res blds
-    ISNULL	//  blds res _57
-    NOT	//  blds res _58
+    ISNULL	//  blds res _38
+    NOT	//  blds res _39
   }>DO<{	//  blds res
     SWAP	//  res blds
     UNCONS	//  res res' blds
     s0 s2 XCHG	//  blds res' res
-    STBREFR
+    ENDC	//  blds res' _43
+    SWAP	//  blds _43 res'
+    STREF	//  blds res
   }>	//  blds res
   NIP	//  res
 """;
