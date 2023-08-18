@@ -58,62 +58,71 @@ builder solve_asm(int flat, slice text) asm """
   }>	//  f t next
   s2 s2 s1 XC2PU	//  next f t f
   UBITSIZE	//  next f t fl
-  NEWC //  next f t fl res
-
+  PUSHNULL	//  next f t fl blds
+  NEWC	//  next f t fl blds res
+  
   AGAINBRK:<{
-    // .. next f t fl res
-
     AGAINBRK:<{
-      // f t fl res
-      s2 s1 PUSH2 LDUXQ IFNOTRETALT
-      // f t fl res x t'
+      // f t fl blds res
+      2OVER	PLDUXQ IFNOTRETALT
+      // f t fl blds res x
 
-      s1 s5 XCPU	//  f t fl res t' x f
+      s5 PUSH	//  f t fl blds res x f
 
-      EQUAL
-      IF:<{	// f t fl res t'
-        s3 POP	//  f t' fl res
-        value GETGLOB	//  f t' fl res v
-      }>ELSE<{	// f t fl res t'
-        DROP	//  f t fl res
-        ROT // f fl res t
-        1 LDSLICE	//  f fl res v t
-        3 -ROLL
+      EQUAL	//  f t fl blds res _15
+      IF:<{	//  f t fl blds res 
+        2OVER SDSKIPFIRST // f t fl blds res t' 
+        s4 POP	//  f t' fl blds res
+        value GETGLOB	//  f t fl blds res v
+      }>ELSE<{	//  f t fl blds res 
+        s0 s3 XCHG	//  f res fl blds t
+        1 LDSLICE	//  f res fl blds v t
+        s4 s4 XCHG2	//  f t fl blds res v
       }>
-      // f t fl res v
 
+      // f t fl blds res v
       STSLICERQ // .. res v -1 or res' 0
       IF:<{ 
-        // .. next f t fl res v
-        NEWC STSLICE // .. next f t fl res res'
-        SWAP 5 ROLLREV // .. res next f t fl res'
+        s0 s2 XCHG CONS	// v blds
+        SWAP NEWC // .. blds v res
+        STSLICE // blds res
       }>
-      // f t fl res
-    }> DROP //  f t fl res
+    }> //  f t fl blds res
     
-    //  next f t fl res
-    s4 PUSH	ISNULL IFRETALT
+    //  next f t fl blds res
+    s5 PUSH	ISNULL IFRETALT
     
-    //  next f t fl res
-    s2 s4 XCHG2	//  res f fl t next
-    ~reshape_slices INLINECALLDICT	//  res f fl t next
-    s2 s4 XCHG2
-    //  next f t fl res
-  }>
-  //  ... next f t fl res
+    //  next f t fl blds res
+    s3 s5 XCHG2	//  res f blds fl t next
+    ~reshape_slices INLINECALLDICT	//  res f blds fl t next
+    s3 s5 XCHG2
+    //  next f t fl blds res
+
+  }>	//  next f t fl blds res
+  //  next f t fl blds res
   
-  NIP s3 POP NIP
-  // .. res t
-
-  STSLICERQ // .. res t -1 or res' 0
+  s2 POP s4 POP s2 POP	//  blds res t
+  STSLICERQ // .. res v -1 or res' 0
   IF:<{ 
-    // .. res t
-    NEWC STSLICE // .. res res'
+    s0 s2 XCHG CONS	// v blds
+    SWAP NEWC // .. blds v res
+    STSLICE // blds res
   }>
+  // blds res	
 
-  DEPTH DEC REPEAT:<{
-    STBREFR
-  }>
+  WHILE:<{
+    OVER	//  blds res blds
+    ISNULL	//  blds res _38
+    NOT	//  blds res _39
+  }>DO<{	//  blds res
+    SWAP	//  res blds
+    UNCONS	//  res res' blds
+    s0 s2 XCHG	//  blds res' res
+    ENDC	//  blds res' _43
+    SWAP	//  blds _43 res'
+    STREF	//  blds res
+  }>	//  blds res
+  NIP	//  res
 """;
 
 builder solve(int flag, slice text) {
