@@ -1,94 +1,95 @@
-# 🏆 Welcome to the TON Smart Challenge #4
-### by TON Foundation
+# TON Smart Challenge #4 top1 solutions
 
-## 📝 Tasks
+Here you can find the winner's solutions for each task. You can read a brief explanation of the solutions below:
 
-1. [task1](/contracts/1.fc) - Find branch of the cell tree
-2. [task2](/contracts/2.fc) - Matrix multiplier
-3. [task3](/contracts/3.fc) - Find and replace binary substring 
-4. [task4](/contracts/4.fc) - Caesar Cipher
-5. [task5](/contracts/5.fc) - Fibonacci sequence
+## Task 1
 
-Each of the tasks has two parts:
+Key ideas:
+1. Store the dfs stack of cells-to-visit directly on the TVM stack
+2. Use the TRY primitive to exit the loop in the case the stack is empty by stack underflow exception (that is, in the case we have traversed the whole tree but didn't find the requested cell)
+3. Store the requested hash in a global variable to avoid unnecessary stack manipulations
+4. Use UNTIL loop to automatically exit on equality of the hashes
 
-- 📋 A comment with a description of what the smart contract should do.
-- 💻 The code of the smart contract with one or more functions marked as `testable`.
+## Task 2
 
-The goal of the contestants is to provide a code that matches the description.
-Each task may give the contestant either 0 or 5 to 6 score points: 5 for all tests passed plus "gas-score" from 0 to 1 (0 for "infinite" gas consumption, 1 for 0 gas consumption, dependence is inverse exponent).
-Each TVM execution is limited to 100,000,000 (hundred million) gas units.
-This limit is high enough that it only rules out infinite loops. Any practical solution, regardless of how (un)optimized it is, will fit.
+It's slighty optimized FunC solution (with `TUPLEVAR` instead of `TPUSH` or `SETINDEXVAR`). There are better solutions due to smaller amount of stack manipulations.
 
-We ask participants not to change the signature (number, order, and types of arguments and result) of `testable` functions for us to be able to evaluate their submission.
+## Task 3
 
-## 📅 Solution submission guide and terms
+Key ideas:
+1. Handle the case of the flag occupying two consequent cells by rebuiling the current cell with the bits from the next cell on demand, so that the same read-from-one-cell loop can be used.
+2. Use the quiet primitives `PLDUXQ` and `STSLICERQ` to read and write data to avoid checking the size of slices/builders in advance.
 
-1. **Registration Process**: Before you begin, make sure to go through the registration process via the [@toncontest_bot](https://t.me/toncontest_bot). Your solutions will not be accepted if you are not properly registered.
+You can get a better solution using `SDPFX` or `SDBEGINSXQ` instead of `PLDUXQ`.
 
-2. **Create a Private GitHub Repository**: Clone this repository and set it as your own private GitHub repo. Ensuring the visibility configs are set to "private" is crucial to safeguarding your solution.
+## Task 4 
 
-3. **Set Your Token**: Utilize the `token` provided to you during registration in Telegram bot and set it as a secret variable called USER_TOKEN in your private repository. You can learn more about setting secret variables in the [official GitHub documentation](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/managing-encrypted-secrets-for-your-repository-and-organization-for-github-codespaces#adding-secrets-for-a-repository).
+The key idea is to use the following bit magic to process 32 bytes at a time:
 
-4. **Submit Your Solution**: When you are ready to submit your solution, simply push your code into your private repository. The code will be sent to the task review server, and GitHub actions will display the status of your submission.
+```
+const int shift = 15; ;; your shift here
 
-5. **Solution Evaluation**: If at least one of your solutions works well, your submission will be counted. Feel free to push solutions for more tasks; GitHub actions will run your code against tests and count successful submissions.
+int main(int x) {
+    int mask7 = 0x8080808080808080808080808080808080808080808080808080808080808080;
+    int mask0 = 0x0101010101010101010101010101010101010101010101010101010101010101;
+    int mask5 = 0x2020202020202020202020202020202020202020202020202020202020202020;
 
-6. **Check Your Points**: To check your solution points, review the logs of the GitHub action for your latest commit. Additionally, you can find your solution points in the menu button inside of the Telegram bot.
+    int nx5 = (~ x) & mask5;
+    x = x | mask5;
+    int nx7 = (~ x) & mask7;
+    
+    int x' = x | mask7;
+    int x_gt = x' - (mask0 * 97);
+    int x_mid = x' - (mask0 * (123 - shift));
 
-Best of luck with your submissions!
+    int x+ = nx7 & x_gt & (~ x_mid);
+    x += (x+ >> 7) * shift;
 
-If for some reason you are not comfortable using the Blueprint environment to write tests for contracts, you can create your own repository. The most important thing is that all your func files with solutions should be in the /contracts folder and named taskN.fc
+    int x_lt = x' - (mask0 * 123);
+    int x- = nx7 & x_mid & (~ x_lt);
+    x -= (x- >> 7) * (26 - shift);
 
-## 🏆 Prize distribution
-
-Winners of the contest will receive prizes nominated in TON, the native cryptocurrency of the TON blockchain, which is also used as a resource for contract execution.
-
-**The prize distribution will be divided among 3 groups of participants, each receiving 10,000 TON:**
-
-1. The first group will consist of the top 15% of challengers.
-2. The second group will consist of 30% of average participants.
-3. The third group will consist of the remaining 55% of the contestants.
-
-Participants will be scored based on the following system: each solved problem earns 5 points, and there will be an additional optimization score ranging from 0 to 1 point (where 0 represents an infinite amount of gas spent on the problem, and 1 represents 0 gas spent).
-
-## 📚 Getting Started with TON
-
-For those new to TON development, begin with:
-
-- [Developers Portal](https://ton.org/dev?filterBy=developSmartContract)
-- [TON Documentation](https://docs.ton.org)
-- [Awesome TON Resources](https://github.com/ton-community/awesome-ton)
-
-Dive deeper into TON with these essential reads:
-- [Understanding TON Concepts](https://docs.ton.org/learn/introduction)
-- [Writing Smart Contracts](https://docs.ton.org/develop/smart-contracts/)
-- [Introduction to FunC](https://docs.ton.org/develop/func/overview)
-
-For pre-built smart contract examples, visit [this section](https://docs.ton.org/develop/smart-contracts/examples).
-
-Stay updated and join discussions on TON Developer Chats:
-- English: [@tondev_eng](https://t.me/tondev_eng)
-- Chinese: [@tondev_zh](https://t.me/tondev)
-- Russian: [@tondev](https://t.me/tondev)
-
-For FunC learners, join the discussion at [@ton_learn](https://t.me/ton_learn).
-
-## 🛠️ Tools for Compilation and Testing
-
-While we recommend [blueprint](https://github.com/ton-org/blueprint) for working with FunC contracts, [toncli](https://ton.org/docs/develop/smart-contracts/testing/toncli) is also a viable option for compiling and local testing.
-
-### Blueprint
-
-Run the following in the terminal to create a new project and choose "A simple counter contract" as an example:
-
-```console
-npm create ton@latest
+    x ^= nx5;
+    return x;
+}
 ```
 
-Read more about writing tests [here](https://github.com/ton-org/sandbox#writing-tests).
+The magic uses the fact that uppercase and lowercase letters in ASCII differ only in the 5th bit. It sets the most significant bit to 1 in every byte and then subtracts a lower bound (97, 123 - shift or 123) to get the mask of bytes which are at least the subtracted number, then perfom the shift only for bytes needed based on the obtained mask.
 
-### FunC syntax highlight
+## Task 5
 
-For a more streamlined coding experience, consider using [IDE plugins](https://docs.ton.org/develop/smart-contracts/environment/ide-plugins) for syntax highlighting.
+The key idea is to use `IFBITJMPREF` to obtain the n-th and (n + 1)-th Fibonacci numbers, then use `REPEAT:<{ 2DUP ADD }>` to obtain the answer and `TUPLEVAR` to pack it in the tuple.
 
+Here is the python script I used to generate the `IFBITJMPREF` table:
+```
+def gen_dict(n):
+    a = 0
+    b = 1
+    res = {}
+    for i in range(n + 1):
+        res[i] = a
+        a, b = b, a + b
+    res[371] = 0
+    return res
 
+def gen_asm(dict, bits, l, x):
+    if bits == l:
+        if x in dict and x + 1 in dict:
+            return "DROP " + str(dict[x]) + " PUSHINT " + str(dict[x + 1]) + " PUSHINT"
+        else:
+            return ""
+
+    r0 = gen_asm(dict, bits + 1, l, x * 2)
+    r1 = gen_asm(dict, bits + 1, l, x * 2 + 1)
+
+    if r0 == "":
+        return r1
+    if r1 == "":
+        return r0
+
+    return "<{ " + r1 + " }>c " + str(l - 1 - bits) + " IFBITJMPREF " + r0
+
+d = gen_dict(370)
+table = gen_asm(d, 0, 9, 0)
+print(table)
+```
