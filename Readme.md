@@ -6,9 +6,9 @@ Here you can find the winner's solutions for each task. You can read a brief exp
 
 Key ideas:
 1. Store the dfs stack of cells-to-visit directly on the TVM stack
-2. Use the TRY primitive to exit the loop in the case the stack is empty by stack underflow exception (that is, in the case we have traversed the whole tree but didn't find the requested cell)
+2. Use the `TRY` primitive to exit the loop in the case the stack is empty by stack underflow exception (that is, in the case we have traversed the whole tree but didn't find the requested cell)
 3. Store the requested hash in a global variable to avoid unnecessary stack manipulations
-4. Use UNTIL loop to automatically exit on equality of the hashes
+4. Use `UNTIL` loop to automatically exit on equality of the hashes
 
 ## Task 2
 
